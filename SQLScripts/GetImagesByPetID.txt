@@ -1,0 +1,10 @@
+SELECT p."PetID"
+  ,p."PetName"
+  ,pi."PetImageID"
+  ,i."ImageID"
+  ,i."URL"
+  ,i."ImageDescription"
+FROM "Image" i
+JOIN "PetImage" pi on i."ImageID" = pi."ImageID"
+JOIN "Pet" p on pi."PetID" = p."PetID"
+WHERE p."PetID" = 1

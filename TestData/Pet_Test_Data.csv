@@ -18,4 +18,4 @@ PetID,ProfileID,PetName,Species,Breed,Birthdate,Size,Gender,PetDescription,Statu
 17,5,Misty,Cat,Ragdoll,2019-02-14,Medium,Female,"Loves to be held and cuddled.",Available
 18,6,Bubbles,Bird,Lovebird,2021-09-09,Small,Female,"Colorful and social.",Pending
 19,1,Shadow,Dog,Poodle,2015-12-05,Medium,Male,"Smart and energetic.",Available
-20,2,Whiskers,Cat,Persian,2018-08-21,Medium,Male,"Fluffy and affectionate.",Adopted
+20,2,Whiskers,Cat,Persian,2018-08-21,Medium,Male,"Fluffy and affectionate.",Available
