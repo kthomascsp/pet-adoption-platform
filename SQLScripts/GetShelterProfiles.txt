@@ -1,0 +1,11 @@
+SELECT "ProfileID"
+  ,"ProfileType"
+  ,"ProfileName"
+  ,"ProfileDescription"
+  ,"Address"
+  ,"City"
+  ,"State"
+  ,"Zip"
+  ,"Phone"
+FROM "Profile"
+WHERE "ProfileType" = 'shelter'
