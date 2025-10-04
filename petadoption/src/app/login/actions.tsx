@@ -29,13 +29,25 @@ export async function signup(formData: FormData) {
 
     // type-casting here for convenience
     const data = {
+        accountType: formData.get('accountType') as string,
+        firstname: formData.get('firstname') as string,
+        lastname: formData.get('lastname') as string,
+        address: formData.get('address') as string,
+        city: formData.get('city') as string,
+        state: formData.get('state') as string,
+        zip: formData.get('zip') as string,
+        phone: formData.get('phone') as string,
         email: formData.get('email') as string,
         password: formData.get('password') as string,
     }
 
-    const { error } = await supabase.auth.signUp(data)
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+    })
 
-    if (error) {
+    if (signUpError) {
+        console.error('Signup error:', signUpError.message)
         redirect('/error')
     }
 

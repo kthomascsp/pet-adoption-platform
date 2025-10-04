@@ -22,6 +22,9 @@ const Header = () => {
                         <Link href="/">
                             About Us
                         </Link>
+                        <Link href="/login">
+                            Login
+                        </Link>
             </nav>
         </header>
      );
