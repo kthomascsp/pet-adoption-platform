@@ -51,6 +51,30 @@ export async function signup(formData: FormData) {
         redirect('/error')
     }
 
+    if (authData?.user) {
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+            {
+            ProfileID: authData.user.id,
+            ProfileType: data.accountType,
+            ProfileName: data.firstname,
+            LastName: data.lastname,
+            Address: data.address,
+            City: data.city,
+            State: data.state,
+            Zip: data.zip,
+            Phone: data.phone,
+            ProfileDescription: "Edit your personal description.",
+            ImageID: ""
+            },
+      ])
+
+    if (profileError) {
+      console.error('Profile error:', profileError.message)
+    }
+  }
+
     revalidatePath('/', 'layout')
     redirect('/')
 }
