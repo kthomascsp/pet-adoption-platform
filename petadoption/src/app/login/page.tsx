@@ -28,8 +28,8 @@ export default function LoginPage() {
                             <span className="text-lg">Shelter</span>
                         </label>
                         <label className="flex items-center space-x-2">
-                            <input type="radio" name="accountType" value="adoptee" className="h-5 w-5 text-blue-600 focus:ring-blue-500"/>
-                            <span className="text-lg">Adoptee</span>
+                            <input type="radio" name="accountType" value="adopter" className="h-5 w-5 text-blue-600 focus:ring-blue-500"/>
+                            <span className="text-lg">Adopter</span>
                         </label>
                     </div>
                     <input type="firstname" name="firstname" placeholder="First Name" className="border p-3 rounded w-100 m-3" required/>
