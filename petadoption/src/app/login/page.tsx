@@ -1,6 +1,8 @@
+"use server";
+
 import { login, signup } from './actions'
 
-export default function LoginPage() {
+export default async function LoginPage() {
     return (
         <div className="flex items-center justify-evenly p-8">
             <div className="flex flex-col justify-center items-center">
