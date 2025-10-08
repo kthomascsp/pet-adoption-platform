@@ -54,6 +54,7 @@ export async function signup(formData: FormData) {
         .from("Profile")
         .insert([
             {
+			ProfileID: authData.user.id,
             ProfileType: data.accountType,
             ProfileName: data.firstname,
             LastName: data.lastname,
@@ -62,7 +63,7 @@ export async function signup(formData: FormData) {
             State: data.state,
             Zip: data.zip,
             Phone: data.phone,
-            ProfileDescription: "Edit your personal description.",
+            //ProfileDescription: "Edit your personal description.",
             //ImageID: "",
             ProfileEmail: data.email
             },
