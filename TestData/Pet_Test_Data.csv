@@ -1,21 +1,11 @@
-PetID,ProfileID,PetName,Species,Breed,Birthdate,Size,Gender,PetDescription,Status
-1,3,Rocky,Dog,Beagle,2019-01-23,Medium,Male,"Loves walks and sniffing around.",Available
-2,1,Max,Cat,Calico,2019-11-05,Small,Male,"Loves to nap in sunny spots.",Available
-3,2,Charlie,Dog,Mixed,2020-02-20,,Male,"Friendly with kids and other dogs.",Available
-4,2,Daisy,Bird,Parakeet,2021-07-15,Small,Female,"Chirpy and social, enjoys attention.",Adopted
-5,3,Luna,,Siamese,2017-04-01,Small,Female,"Curious and affectionate.",Available
-6,1,Bella,Dog,Boxer,2018-06-12,Medium,Female,"Energetic and playful dog.",Available
-7,4,Coco,Hampster,Syrian,2022-03-10,Small,Female,"Active at night, enjoys running.",Available
-8,4,Molly,Dog,Labrador,2018-09-18,Large,Female,,Pending
-9,5,Buddy,Dog,Golden Retriever,2020-05-12,Large,Male,"Loves fetch and swimming.",Available
-10,5,Ginger,Cat,Tabby,2021-08-08,Small,Female,"Very playful and cuddly.",Available
-11,6,Oscar,Bird,Canary,2019-10-02,Small,Male,"Sings beautifully, enjoys sunlight.",Adopted
-12,6,Peanut,Hampster,,2022-12-01,Small,,"Small and fast, loves exercise.",Available
-13,1,Ruby,Cat,Maine Coon,2016-07-14,Large,Female,"Gentle giant, friendly.",Available
-14,2,Duke,Dog,Bulldog,2018-03-22,Medium,Male,"Calm and affectionate.",Pending
-15,3,Kiwi,Bird,Cockatiel,2020-11-30,Small,Female,"Loves interaction, very vocal.",Available
-16,4,Spike,Dog,German Shepherd,2017-06-10,Large,Male,"Loyal and protective.",Available
-17,5,Misty,Cat,Ragdoll,2019-02-14,Medium,Female,"Loves to be held and cuddled.",Available
-18,6,Bubbles,Bird,Lovebird,2021-09-09,Small,Female,"Colorful and social.",Pending
-19,1,Shadow,Dog,Poodle,2015-12-05,Medium,Male,"Smart and energetic.",Available
-20,2,Whiskers,Cat,Persian,2018-08-21,Medium,Male,"Fluffy and affectionate.",Available
+ProfileID,PetName,Species,Breed,Birthdate,Size,Gender,PetDescription,Status
+a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Rocky,dog,Beagle,2019-01-23,medium,male,"Loves walks and sniffing around.",available
+4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,Max,cat,Calico,2019-11-05,small,male,"Loves to nap in sunny spots.",available
+4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,Charlie,dog,Mixed,2020-02-20,,male,"Friendly with kids and other dogs.",available
+a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Daisy,bird,Parakeet,2021-07-15,small,female,"Chirpy and social, enjoys attention.",adopted
+4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,Luna,,Siamese,2017-04-01,small,female,"Curious and affectionate.",available
+a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Bella,dog,Boxer,2018-06-12,medium,female,"Energetic and playful dog.",available
+a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Coco,hampster,Syrian,2022-03-10,small,female,"Active at night, enjoys running.",available
+4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,Molly,dog,Labrador,2018-09-18,large,female,,pending
+a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Buddy,dog,Golden Retriever,2020-05-12,large,male,"Loves fetch and swimming.",available
+a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Ginger,cat,Tabby,2021-08-08,small,female,"Very playful and cuddly.",available

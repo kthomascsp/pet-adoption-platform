@@ -1,5 +1,4 @@
 SELECT "ProfileID"
-  ,"ProfileType"
   ,"ProfileName"
   ,"ProfileDescription"
   ,"Address"
@@ -7,5 +6,6 @@ SELECT "ProfileID"
   ,"State"
   ,"Zip"
   ,"Phone"
+  ,"ProfileEmail"
 FROM "Profile"
 WHERE "ProfileType" = 'shelter'

@@ -1,0 +1,6 @@
+INSERT INTO auth.users (id, email)
+VALUES
+  ('a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3', 'staff@sunnypaws.org'),
+  ('4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f', 'info@hts.com'),
+  ('8b1f0de9-9b52-48a1-a3b3-9b1c8b52d9d4', 'jsmith@mywebsite.com'),
+  ('c2f9e70f-8b47-42a1-9e59-17cb5e4a6172', 'sarahj@anydomain.com');

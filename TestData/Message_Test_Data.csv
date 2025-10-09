@@ -1,6 +1,6 @@
 MessageID,SenderID,RecipientID,Content,MessageDateTime
-1,8,2,"Hi I'm Sarah. I have a question about one of your cats.",2025-09-28 10:20:00.000
-2,2,8,"Hi Sarah. Which cat do you want to know more about?",2025-09-28 10:42:00.000
-3,8,2,"I'm curious about Whiskers. Does he get along with dogs?",2025-09-28 10:56:00.000
-4,2,8,"Yes, Whiskers likes most dogs.",2025-09-28 11:01:00.000
-5,8,2,"Ok, thank you!",2025-09-28 11:04:00.000
+1,c2f9e70f-8b47-42a1-9e59-17cb5e4a6172,4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,"Hi I'm Sarah. I have a question about one of your cats.",2025-09-28 10:20:00.000
+2,4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,c2f9e70f-8b47-42a1-9e59-17cb5e4a6172,"Hi Sarah. Which cat do you want to know more about?",2025-09-28 10:42:00.000
+3,c2f9e70f-8b47-42a1-9e59-17cb5e4a6172,4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,"I'm curious about Max. Does he get along with dogs?",2025-09-28 10:56:00.000
+4,4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,c2f9e70f-8b47-42a1-9e59-17cb5e4a6172,"Yes, Max likes most dogs.",2025-09-28 11:01:00.000
+5,c2f9e70f-8b47-42a1-9e59-17cb5e4a6172,4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,"Ok, thank you!",2025-09-28 11:04:00.000
