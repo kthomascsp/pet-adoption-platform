@@ -16,7 +16,7 @@ const Header = () => {
                         <Link href="/">
                             Shelter
                         </Link>
-                        <Link href="/">
+                        <Link href="/db-test">
                             Adoption Process
                         </Link>
                         <Link href="/pets">
