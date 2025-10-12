@@ -1,5 +1,5 @@
 ProfileID,PetName,Species,Breed,Birthdate,Size,Gender,PetDescription,Status
-a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Rocky,dog,Beagle,2019-01-23,medium,male,"Loves walks and sniffing around.",available
+a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Rocky,dog,Pug,2019-01-23,small,male,"Loves walks and sniffing around.",available
 4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,Max,cat,Calico,2019-11-05,small,male,"Loves to nap in sunny spots.",available
 4f7c1f58-b6c0-4c62-8b8c-1e94b8a22c7f,Charlie,dog,Mixed,2020-02-20,,male,"Friendly with kids and other dogs.",available
 a94a4a4e-8a12-4a2a-b62f-53dc9d89d6a3,Daisy,bird,Parakeet,2021-07-15,small,female,"Chirpy and social, enjoys attention.",adopted

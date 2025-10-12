@@ -1,19 +1,15 @@
-"use client"; // 👈 Required for client-side rendering in Next.js app directory
+"use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client"; // Import function to create Supabase client
+import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
 
 export default function DbTestPage() {
-    // State to hold the list of pets retrieved from the database
     const [pets, setPets] = useState<any[]>([]);
-
-    // State to indicate if the page is currently loading data
     const [loading, setLoading] = useState(false);
-
-    // State to store any error messages from Supabase queries
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    // State object for filters used in search inputs
+    // Filters
     const [filters, setFilters] = useState({
         name: "",
         city: "",
@@ -27,32 +23,23 @@ export default function DbTestPage() {
         description: "",
     });
 
-    // Options for dropdowns (static for now, could also be fetched from DB)
+    // Dropdown options
     const speciesOptions = ["", "Dog", "Cat", "Bird", "Rabbit", "Other"];
     const sizeOptions = ["", "Small", "Medium", "Large"];
     const genderOptions = ["", "Male", "Female"];
 
-    /**
-     * handleChange: Updates the corresponding filter value when an input/select changes
-     * @param e - The change event from an input or select element
-     */
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFilters((prev) => ({ ...prev, [name]: value })); // Update the filters state dynamically
+        setFilters((prev) => ({ ...prev, [name]: value }));
     };
 
-    /**
-     * fetchPets: Queries Supabase to retrieve pets based on the current filters
-     */
     const fetchPets = async () => {
-        setLoading(true); // Show loading state
-        setErrorMsg(null); // Clear any previous error
-        const supabase = createClient(); // Create Supabase client
+        setLoading(true);
+        setErrorMsg(null);
+        const supabase = createClient();
 
-        // Start query from the view we created in Supabase
         let query = supabase.from("pet_search_view").select("*");
 
-        // Dynamically add filters using ilike (case-insensitive LIKE)
         if (filters.name) query = query.ilike("PetName", `%${filters.name}%`);
         if (filters.city) query = query.ilike("City", `%${filters.city}%`);
         if (filters.state) query = query.ilike("State", `%${filters.state}%`);
@@ -61,60 +48,45 @@ export default function DbTestPage() {
         if (filters.breed) query = query.ilike("Breed", `%${filters.breed}%`);
         if (filters.size) query = query.ilike("Size", `%${filters.size}%`);
         if (filters.gender) query = query.ilike("Gender", `%${filters.gender}%`);
-        if (filters.description)
-            query = query.ilike("PetDescription", `%${filters.description}%`);
+        if (filters.description) query = query.ilike("PetDescription", `%${filters.description}%`);
 
-        // Age filter: converts age in years to Birthdate cutoff
         if (filters.age) {
             const minDate = new Date();
             minDate.setFullYear(minDate.getFullYear() - parseInt(filters.age));
-            query = query.lte("Birthdate", minDate.toISOString()); // Less than or equal to cutoff date
+            query = query.lte("Birthdate", minDate.toISOString());
         }
 
-        // Execute the query
         const { data, error } = await query;
 
         if (error) {
-            // Handle errors
             console.error("Error fetching pets:", error);
             setErrorMsg(error.message);
-            setPets([]); // Clear pets list on error
+            setPets([]);
         } else {
-            setPets(data || []); // Save data or empty array
+            setPets(data || []);
         }
-        setLoading(false); // Done loading
+
+        setLoading(false);
     };
 
-    /**
-     * Initial fetch when component mounts
-     * useEffect with empty dependency array runs only once
-     */
     useEffect(() => {
         fetchPets();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    /**
-     * Auto-update search results when filters change
-     * Adds a 500ms debounce to avoid excessive API calls
-     */
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
             fetchPets();
         }, 500);
-
-        return () => clearTimeout(delayDebounce); // Cleanup previous timeout
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        return () => clearTimeout(delayDebounce);
     }, [filters]);
 
     return (
         <main className="p-6 space-y-6">
-            {/* Page title */}
             <h1 className="text-2xl font-bold">Pet Search</h1>
 
-            {/* Filter Inputs */}
+            {/* Search Filters */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {/* Text inputs for various filter fields */}
+                {/* Text Inputs */}
                 <input
                     type="text"
                     name="name"
@@ -181,7 +153,7 @@ export default function DbTestPage() {
                 >
                     {speciesOptions.map((opt) => (
                         <option key={opt} value={opt}>
-                            {opt || "Species"} {/* Show placeholder if empty */}
+                            {opt || "Species"}
                         </option>
                     ))}
                 </select>
@@ -222,24 +194,40 @@ export default function DbTestPage() {
                 </p>
             )}
 
-            {/* Results */}
             {loading && <p>Loading...</p>}
             {errorMsg && <p className="text-red-600">Error: {errorMsg}</p>}
 
-            <ul className="space-y-2">
-                {/* Map over pets and display details */}
+            {/* Results Grid */}
+            <ul className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {pets.map((pet) => (
-                    <li key={pet.PetID} className="border p-3 rounded">
-                        <p className="font-semibold">
-                            {pet.PetName} ({pet.Species})
-                        </p>
-                        <p>
-                            {pet.Breed} – {pet.Size}, {pet.Gender}
-                        </p>
-                        <p>
-                            Location: {pet.City}, {pet.State} {pet.Zip}
-                        </p>
-                        <p>{pet.PetDescription}</p>
+                    <li key={pet.PetID} className="border rounded-lg overflow-hidden shadow">
+                        {/* Pet Image */}
+                        {pet.ImageURL ? (
+                            <div className="relative w-full h-48">
+                                <Image
+                                    src={pet.ImageURL}
+                                    alt={pet.PetName}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
+                        ) : (
+                            <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                                No Image
+                            </div>
+                        )}
+
+                        {/* Pet Info */}
+                        <div className="p-3">
+                            <p className="font-semibold text-lg">{pet.PetName}</p>
+                            <p className="text-sm text-gray-700">
+                                {pet.Breed} – {pet.Size}, {pet.Gender}
+                            </p>
+                            <p className="text-sm text-gray-700">
+                                {pet.City}, {pet.State} {pet.Zip}
+                            </p>
+                            <p className="text-sm text-gray-600 mt-2">{pet.PetDescription}</p>
+                        </div>
                     </li>
                 ))}
             </ul>
