@@ -1,4 +1,4 @@
-"use server";
+"use server"
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -15,12 +15,13 @@ export async function login(formData: FormData) {
     const { error } = await supabase.auth.signInWithPassword(data)
 
     if (error) {
-        redirect("/error")
+        console.error("Login error:", error.message)
+        return { error: error.message } // don't redirect on error
     }
 
-    console.log("Login Complete Succesfully")
+    console.log("✅ Login successful")
     revalidatePath("/", "layout")
-    redirect("/")
+    redirect("/login")
 }
 
 export async function signup(formData: FormData) {
@@ -46,40 +47,52 @@ export async function signup(formData: FormData) {
 
     if (signUpError) {
         console.error("Signup error:", signUpError.message)
-        redirect("/error")
+        return { error: signUpError.message }
     }
 
     if (authData?.user) {
-    const { error: profileError } = await supabase
-        .from("Profile")
-        .insert([
-            {
-			ProfileID: authData.user.id,
-            ProfileType: data.accountType,
-            ProfileName: data.firstname,
-            LastName: data.lastname,
-            Address: data.address,
-            City: data.city,
-            State: data.state,
-            Zip: data.zip,
-            Phone: data.phone,
-            //ProfileDescription: "Edit your personal description.",
-            //ImageID: "",
-            ProfileEmail: data.email
-            },
-      ])
+        const { error: profileError } = await supabase
+            .from("Profile")
+            .insert([
+                {
+                    ProfileID: authData.user.id,
+                    ProfileType: data.accountType,
+                    ProfileName: data.firstname,
+                    LastName: data.lastname,
+                    Address: data.address,
+                    City: data.city,
+                    State: data.state,
+                    Zip: data.zip,
+                    Phone: data.phone,
+                    ProfileEmail: data.email,
+                },
+            ])
 
-    if(profileError) {
-      console.error("Error:", profileError.message)
+        if (profileError) {
+            console.error("Profile insert error:", profileError.message)
+            return { error: profileError.message }
+        }
+
+        console.log("✅ Profile successfully created")
+    } else {
+        console.warn("⚠️ Profile not created: no user returned from signup")
     }
-    else {
-      console.log("Profile successfully created")
-    }
-  }
-  else {
-    console.warn("Profile not created.")
-  }
 
     revalidatePath("/", "layout")
-    redirect("/")
+    redirect("/login")
+}
+
+export async function logout() {
+    const supabase = await createClient()
+
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+        console.error("Logout error:", error.message)
+        return { error: error.message }
+    }
+
+    console.log("✅ Logged out successfully")
+    revalidatePath("/", "layout")
+    redirect("/login")
 }
