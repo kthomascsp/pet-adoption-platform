@@ -1,0 +1,14 @@
+create table public."Pet" (
+  "PetID" uuid not null default gen_random_uuid(),
+  "ProfileID" uuid not null,
+  "PetName" text not null,
+  "Species" text null,
+  "Breed" text null,
+  "Birthdate" date null,
+  "Size" text null,
+  "Gender" text null,
+  "PetDescription" text null,
+  "Status" text not null,
+  constraint Pet_pkey primary key ("PetID"),
+  constraint Pet_ProfileID_fkey foreign KEY ("ProfileID") references "Profile" ("ProfileID")
+) TABLESPACE pg_default;

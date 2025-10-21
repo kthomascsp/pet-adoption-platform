@@ -1,0 +1,15 @@
+create table public."Profile" (
+  "ProfileID" uuid not null,
+  "ProfileType" text not null,
+  "ProfileName" text not null,
+  "LastName" text null,
+  "Address" text null,
+  "City" text null,
+  "State" text null,
+  "Zip" text null,
+  "Phone" text null,
+  "ProfileEmail" text null,
+  "ProfileDescription" text null,
+  constraint Profile_pkey primary key ("ProfileID"),
+  constraint Profile_ProfileID_fkey foreign KEY ("ProfileID") references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;

@@ -10,17 +10,20 @@ const Header = () => {
                         <Link href="/" className="hover:bg-blue-600 transition-colors">
                             Home
                         </Link>
-                        <Link href="/">
+                        <Link href="/pets">
                             Pets
                         </Link>
                         <Link href="/">
                             Shelter
                         </Link>
-                        <Link href="/">
+                        <Link href="/db-test">
                             Adoption Process
                         </Link>
-                        <Link href="/">
+                        <Link href="/pets">
                             About Us
+                        </Link>
+                        <Link href="/login">
+                            Login
                         </Link>
             </nav>
         </header>

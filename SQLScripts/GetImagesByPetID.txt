@@ -1,10 +1,12 @@
-SELECT p."PetID"
-  ,p."PetName"
-  ,pi."PetImageID"
+PREPARE get_images_by_petid AS
+
+SELECT p."PetName"
   ,i."ImageID"
   ,i."URL"
   ,i."ImageDescription"
 FROM "Image" i
-JOIN "PetImage" pi on i."ImageID" = pi."ImageID"
-JOIN "Pet" p on pi."PetID" = p."PetID"
-WHERE p."PetID" = 1
+JOIN "Pet" p on p."PetID" = i."OwnerID"
+WHERE p."PetID" = $1
+  AND i."ImageType" = 'Pet';
+
+EXECUTE get_images_by_petid('29846f44-d2d4-46e2-a4fc-e3d9a2b6fc8a');
