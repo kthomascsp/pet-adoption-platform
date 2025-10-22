@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
+import Link from "next/link";
 
 /**
  * PetsPage Component (Server Component)
@@ -165,10 +166,8 @@ export default async function PetsPage(props: { searchParams?: Record<string, st
                 // ✅ Results grid — shows pet cards
                 <div className="flex flex-wrap justify-center p-6 m-8">
                     {pets.map((pet) => (
-                        <div
-                            key={pet.PetID}
-                            className="cursor-pointer border m-8 p-6 flex flex-col items-center hover:shadow-lg transition-shadow"
-                        >
+                        <Link key={pet.PetID} href={`/pets/${pet.PetID}`}
+                        className="cursor-pointer border m-8 p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
                             {/* Pet image (or placeholder if none) */}
                             {pet.ImageURL ? (
                                 <div className="relative w-full h-48 mb-4">
@@ -192,7 +191,7 @@ export default async function PetsPage(props: { searchParams?: Record<string, st
                             <p>{pet.Size} {pet.Species} - {pet.Breed}</p>
                             <p>{pet.City} {pet.State}, {pet.Zip}</p>
                             <p>{pet.PetDescription}</p>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             ) : (
