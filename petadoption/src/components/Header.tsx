@@ -13,7 +13,7 @@ const Header = () => {
                         <Link href="/pets">
                             Pets
                         </Link>
-                        <Link href="/">
+                        <Link href="/shelters">
                             Shelter
                         </Link>
                         <Link href="/db-test">
