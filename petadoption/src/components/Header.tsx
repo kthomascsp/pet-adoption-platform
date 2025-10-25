@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server"; // Supabase server-side client
 import LoginStatus from "./ui/LoginStatus"; // Client component for login/logout display
+import Link from "next/link";
 
 // Header component is a Server Component (async) to fetch user data
 const Header = async () => {
@@ -12,7 +13,7 @@ const Header = async () => {
     } = await supabase.auth.getUser();
 
     // Fallback display name to email
-    let displayName = user?.email;
+    let displayName = user?.email ?? "";
 
     if (user) {
         // Query Profile table for user's display name
@@ -73,7 +74,6 @@ const Header = async () => {
                         <Link href="/pets">
                             Pets
                         </Link>
-                        <Link href="/">
                         <Link href="/shelters">
                             Shelter
                         </Link>
