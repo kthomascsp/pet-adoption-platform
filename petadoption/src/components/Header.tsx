@@ -74,6 +74,7 @@ const Header = async () => {
                             Pets
                         </Link>
                         <Link href="/">
+                        <Link href="/shelters">
                             Shelter
                         </Link>
                         <Link href="/db-test">
