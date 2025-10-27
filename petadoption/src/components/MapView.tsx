@@ -1,4 +1,4 @@
-//Google maps component
+//Google Maps Component w/ Light Styling
 
 "use client";
 
