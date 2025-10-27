@@ -19,9 +19,9 @@ export async function login(formData: FormData) {
         return { error: error.message } // don't redirect on error
     }
 
-    console.log("✅ Login successful")
+    console.log(" Login successful")
     revalidatePath("/", "layout")
-    redirect("/login")
+    redirect("/profile")
 }
 
 export async function signup(formData: FormData) {
@@ -73,13 +73,13 @@ export async function signup(formData: FormData) {
             return { error: profileError.message }
         }
 
-        console.log("✅ Profile successfully created")
+        console.log("Profile successfully created")
     } else {
-        console.warn("⚠️ Profile not created: no user returned from signup")
+        console.warn("Profile not created: no user returned from signup")
     }
 
     revalidatePath("/", "layout")
-    redirect("/login")
+    redirect("/profile")
 }
 
 export async function logout() {
@@ -92,7 +92,7 @@ export async function logout() {
         return { error: error.message }
     }
 
-    console.log("✅ Logged out successfully")
+    console.log("Logged out successfully")
     revalidatePath("/", "layout")
     redirect("/login")
 }

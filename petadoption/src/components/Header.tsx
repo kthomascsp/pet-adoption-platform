@@ -68,7 +68,7 @@ const Header = async () => {
                 Pet Adoption
             </h1>
             <nav className="flex justify-evenly text-2xl">
-                        <Link href="/" className="hover:bg-blue-600 transition-colors">
+                        <Link href="/">
                             Home
                         </Link>
                         <Link href="/pets">
@@ -77,14 +77,11 @@ const Header = async () => {
                         <Link href="/shelters">
                             Shelter
                         </Link>
-                        <Link href="/db-test">
+                        <Link href="/">
                             Adoption Process
                         </Link>
-                        <Link href="/pets">
+                        <Link href="/">
                             About Us
-                        </Link>
-                        <Link href="/login">
-                            Login
                         </Link>
             </nav>
         </header>
