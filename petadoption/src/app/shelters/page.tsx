@@ -41,7 +41,7 @@ export default async function ShletersPage(props: { searchParams?: Record<string
         if (address) query = query.ilike("Address", `%${address}%`);
         if (phone) query = query.ilike("Phone", `%${phone}%`);
         if (name) query = query.ilike("ProfileName", `%${name}%`);
-        if (description) query = query.ilike("Description", `%${description}%`);
+        if (description) query = query.ilike("ProfileDescription", `%${description}%`);
         if (email) query = query.ilike("Email", `%${email}%`);
 
         // ✅ Execute Supabase query
@@ -114,10 +114,10 @@ export default async function ShletersPage(props: { searchParams?: Record<string
                 </p>
             ) : shelters.length > 0 ? (
                 // ✅ Results grid — shows pet cards
-                <div className="flex flex-wrap justify-center p-6 m-8">
+                <div className="flex flex-wrap justify-center p-6 m-8 ">
                     {shelters.map((Profile) => (
                         <Link key={Profile.ProfileID} href={`/shelters/${Profile.ProfileID}`}
-                        className="cursor-pointer border m-8 p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
+                        className="cursor-pointer border m-8 p-6 flex flex-col items-center hover:shadow-lg transition-shadow w-[20%]">
                             {/* Pet image (or placeholder if none) */}
                             {Profile.ImageURL ? (
                                 <div className="relative w-full h-48 mb-4">
@@ -135,13 +135,13 @@ export default async function ShletersPage(props: { searchParams?: Record<string
                             )}
 
                             {/* Pet details */}
-                            <h2 className="text-2xl font-semibold">
+                            <h2 className="text-2xl font-semibold p-2">
                                 {Profile.ProfileName}
                             </h2>
                             <p>{Profile.Address}, {Profile.Zip}</p>
                             <p>{Profile.City}, {Profile.State}</p>
                             <p>({Profile.Phone.slice(0, 3)})-{Profile.Phone.slice(3, 6)}-{Profile.Phone.slice(6)}, {Profile.ProfileEmail}</p>
-                            <p>{Profile.ProfileDescription}</p>
+                            <p className="p-3 text-center">{Profile.ProfileDescription}</p>
                         </Link>
                     ))}
                 </div>

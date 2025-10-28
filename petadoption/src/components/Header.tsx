@@ -67,7 +67,7 @@ const Header = async () => {
             ">
                 Pet Adoption
             </h1>
-            <nav className="flex justify-evenly text-2xl">
+            <nav className="flex justify-evenly text-2xl p-8">
                         <Link href="/">
                             Home
                         </Link>

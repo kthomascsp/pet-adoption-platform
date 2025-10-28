@@ -35,6 +35,9 @@ export default async function PetPage({params}: {params:{id:string}}) {
         
             <h2 className="text-4xl font-bold m-6">Details</h2>
             <table className="min-w-[400px] w-[600px] border shadow-md">
+                <tbody>
+                    
+                </tbody>
                 <tr>
                     <td className="p-4 font-semibold border w-40">Species</td>
                     <td className="p-4 border text-center">{pet.Species}</td>
