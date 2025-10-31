@@ -1,202 +1,174 @@
 import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
+import PetFilters from "@/components/PetFilters";
 
-/**
- * PetsPage Component (Server Component)
- * - Displays a list of pets retrieved from Supabase
- * - Allows users to search and filter by various fields
- * - Uses server-side data fetching (no client-side JavaScript needed)
- */
-export default async function PetsPage(props: { searchParams?: Record<string, string | undefined> }) {
-    // ✅ Extract URL search parameters (e.g., ?city=Austin)
+/* Server page: fetch filter options once, apply URL filters, show pet results */
+export default async function PetsPage(props: {
+    searchParams?: Record<string, string | undefined>;
+}) {
     const searchParams = await props.searchParams ?? {};
 
-    let pets = [];
+    let pets: any[] = [];
     let errorMessage = "";
 
+    // Raw filter options (lowercase in DB)
+    let speciesList: string[] = [];
+    let breedList: string[] = [];
+    let genderList: string[] = [];
+    let sizeList: string[] = [];
+
     try {
-        // ✅ Initialize Supabase client (server-side)
         const supabase = await createClient();
 
-        // ✅ Extract individual search fields from query string
-        const city = searchParams.city || "";
-        const name = searchParams.name || "";
-        const state = searchParams.state || "";
-        const zip = searchParams.zip || "";
-        const species = searchParams.species || "";
-        const breed = searchParams.breed || "";
-        const gender = searchParams.gender || "";
-        const size = searchParams.size || "";
-        const age = searchParams.age || "";
+        // 1. Get distinct values for dropdowns
+        const { data: filterData, error: filterError } = await supabase
+            .from("pet_search_view")
+            .select("Species, Breed, Gender, Size")
+            .eq("Status", "available");
 
-        // ✅ Start building the query to the Supabase view
-        //    `pet_search_view` is a database view that includes pet info and image URL
-        let query = supabase.from("pet_search_view").select("*");
+        if (filterError) throw filterError;
 
-        // ✅ Add filters to the query only if the corresponding search field is filled in
-        if (city) query = query.ilike("City", `%${city}%`);
-        if (state) query = query.ilike("State", `%${state}%`);
-        if (zip) query = query.ilike("Zip", `%${zip}%`);
-        if (species) query = query.ilike("Species", `%${species}%`);
-        if (breed) query = query.ilike("Breed", `%${breed}%`);
-        if (name) query = query.ilike("PetName", `%${name}%`);
-        if (gender) query = query.ilike("Gender", `%${gender}%`);
-        if (size) query = query.ilike("Size", `%${size}%`);
+        if (filterData?.length) {
+            const uniq = {
+                species: new Set<string>(),
+                breed: new Set<string>(),
+                gender: new Set<string>(),
+                size: new Set<string>(),
+            };
 
-        // ✅ Special case: Age filter is based on Birthdate field
-        if (age) {
-            const ageNum = Number(age);
-            if (!isNaN(ageNum)) {
+            for (const r of filterData) {
+                const s = r.Species?.trim().toLowerCase();
+                const b = r.Breed?.trim();
+                const g = r.Gender?.trim().toLowerCase();
+                const z = r.Size?.trim().toLowerCase();
+
+                if (s) uniq.species.add(s);
+                if (b) uniq.breed.add(b);
+                if (g) uniq.gender.add(g);
+                if (z) uniq.size.add(z);
+            }
+
+            // Sort and assign to lists
+            speciesList = Array.from(uniq.species).sort();
+            breedList   = Array.from(uniq.breed).sort();
+            genderList  = Array.from(uniq.gender).sort();
+            sizeList    = Array.from(uniq.size).sort();
+        }
+
+        // 2. Normalize search params
+        const toLower = (s?: string) => s?.trim().toLowerCase() || "";
+        const species = toLower(searchParams.species);
+        const gender  = toLower(searchParams.gender);
+        const size    = toLower(searchParams.size);
+        const breed   = searchParams.breed?.trim();
+
+        // 3. Build result query
+        let query = supabase.from("pet_search_view").select("*").eq("Status", "available");
+
+        if (searchParams.city)   query = query.ilike("City", `%${searchParams.city}%`);
+        if (searchParams.state)  query = query.ilike("State", `%${searchParams.state}%`);
+        if (searchParams.zip)    query = query.ilike("Zip", `%${searchParams.zip}%`);
+        if (searchParams.name)   query = query.ilike("PetName", `%${searchParams.name}%`);
+        if (species) query = query.eq("Species", species);
+        if (breed)   query = query.ilike("Breed", `%${breed}%`);
+        if (gender)  query = query.eq("Gender", gender);
+        if (size)    query = query.eq("Size", size);
+
+        // Age filter: birthdate range
+        if (searchParams.age) {
+            const ageNum = Number(searchParams.age);
+            if (!isNaN(ageNum) && ageNum > 0) {
                 const today = new Date();
-                const maxDate = new Date(today.getFullYear() - ageNum, today.getMonth(), today.getDate());
-                const minDate = new Date(today.getFullYear() - ageNum - 1, today.getMonth(), today.getDate() + 1);
-
-                // Pets born between minDate and maxDate will match the age
+                const max = new Date(today.getFullYear() - ageNum, today.getMonth(), today.getDate());
+                const min = new Date(today.getFullYear() - ageNum - 1, today.getMonth(), today.getDate() + 1);
                 query = query
-                    .gte("Birthdate", minDate.toISOString())
-                    .lte("Birthdate", maxDate.toISOString());
+                    .gte("Birthdate", min.toISOString().split("T")[0])
+                    .lte("Birthdate", max.toISOString().split("T")[0]);
             }
         }
 
-        // ✅ Execute Supabase query
+        // Execute query
         const { data, error } = await query;
-
-        // ✅ Handle query errors
         if (error) {
-            console.error("Supabase query error:", error);
+            console.error(error);
             errorMessage = error.message;
         } else {
-            pets = data || [];
+            pets = data ?? [];
         }
-    } catch (err) {
-        // ✅ Handle unexpected errors gracefully
-        console.error("Unexpected error:", err);
-        errorMessage = err instanceof Error ? err.message : String(err);
+    } catch (e) {
+        console.error(e);
+        errorMessage = e instanceof Error ? e.message : String(e);
     }
 
-    /**
-     * Helper Function: calculateAge
-     * - Converts a birthdate string into an age in years
-     * - Returns "Unknown Age" if birthdate is missing
-     */
-    function calculateAge(birthdate: string): string {
-        if (!birthdate) return "Unknown Age";
-        const birth = new Date(birthdate);
-        const today = new Date();
-        const age = today.getFullYear() - birth.getFullYear();
-        const monthDifference = today.getMonth() - birth.getMonth();
-
-        // Adjust age if birthday hasn’t occurred yet this year
-        if (monthDifference < 0) {
-            return `${age - 1}`;
-        }
-        return `${age}`;
-    }
+    // Calculate age from birthdate
+    const calculateAge = (birthdate: string) => {
+        if (!birthdate) return "Unknown";
+        const b = new Date(birthdate);
+        const t = new Date();
+        let age = t.getFullYear() - b.getFullYear();
+        if (t.getMonth() < b.getMonth() || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) age--;
+        return age < 0 ? "0" : `${age}`;
+    };
 
     return (
-        <div>
-            {/* 🐾 Page Header */}
-            <h1 className="text-3xl font-bold text-center m-8">
-                Find Your Perfect Pet
-            </h1>
+        <div className="min-h-screen">
+            <h1 className="text-3xl font-bold text-center my-8">Find Your Perfect Pet</h1>
 
-            {/* 🔍 Search Form — sends query as GET parameters */}
-            <form
-                className="flex flex-col items-center justify-center m-6 w-full max-w-6xl mx-auto"
-                method="GET"
-            >
-                {/* First row: location filters */}
-                <div className="grid grid-cols-3 w-full">
-                    <input type="text" name="city" placeholder="City" className="border p-3 w-full" defaultValue={searchParams.city || ""} />
-                    <input type="text" name="state" placeholder="State" className="border p-3 w-full" defaultValue={searchParams.state || ""} />
-                    <input type="text" name="zip" placeholder="Zip" className="border p-3 w-full" defaultValue={searchParams.zip || ""} />
-                </div>
+            <form method="GET" className="mx-auto max-w-6xl space-y-4">
+                <PetFilters
+                    searchParams={searchParams}
+                    speciesList={speciesList}
+                    breedList={breedList}
+                    genderList={genderList}
+                    sizeList={sizeList}
+                />
 
-                {/* Second row: name / gender / age filters */}
-                <div className="grid grid-cols-3 w-full">
-                    <input type="text" name="name" placeholder="Name" className="border p-3 w-full" defaultValue={searchParams.name || ""} />
-                    <select name="gender" className="border p-3 w-full" defaultValue={searchParams.gender || ""}>
-                        <option value="">Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                    <input type="text" name="age" placeholder="Age" className="border p-3 w-full" defaultValue={searchParams.age || ""} />
-                </div>
-
-                {/* Third row: species / breed / size filters */}
-                <div className="grid grid-cols-3 w-full">
-                    <input type="text" name="species" placeholder="Species" className="border p-3 w-full" defaultValue={searchParams.species || ""} />
-                    <input type="text" name="breed" placeholder="Breed" className="border p-3 w-full" defaultValue={searchParams.breed || ""} />
-                    <select name="size" className="border p-3 w-full" defaultValue={searchParams.size || ""}>
-                        <option value="">Size</option>
-                        <option value="small">Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large">Large</option>
-                    </select>
-                </div>
-
-                {/* Form actions: Clear and Search */}
-                <div className="flex w-full justify-center">
-                    {/* Clear = just navigates back to /pets with no search params */}
-                    <a
-                        href="/pets"
-                        className="cursor-pointer p-4 font-bold bg-red-200 text-red-500 w-[20%] text-center"
-                    >
+                <div className="flex justify-center gap-4">
+                    <Link href="/pets" className="px-6 py-2 bg-red-200 text-red-600 rounded cursor-pointer hover:bg-red-300 transition">
                         Clear
-                    </a>
-
-                    {/* Submitting the form triggers a new server render with updated filters */}
-                    <button
-                        type="submit"
-                        className="cursor-pointer p-4 font-bold bg-blue-400 w-[20%]"
-                    >
+                    </Link>
+                    <button type="submit" className="px-6 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 transition">
                         Search
                     </button>
                 </div>
             </form>
 
-            {/* 🐶 Display results or errors */}
             {errorMessage ? (
-                // Error message
-                <p className="text-red-400 text-center m-6">
-                    No pets found: {errorMessage}
-                </p>
-            ) : pets.length > 0 ? (
-                // ✅ Results grid — shows pet cards
-                <div className="flex flex-wrap justify-center p-6 m-8">
-                    {pets.map((pet) => (
-                        <Link key={pet.PetID} href={`/pets/${pet.PetID}`}
-                        className="cursor-pointer border m-8 p-6 flex flex-col items-center hover:shadow-lg transition-shadow">
-                            {/* Pet image (or placeholder if none) */}
-                            {pet.ImageURL ? (
-                                <div className="relative w-full h-48 mb-4">
-                                    <Image
-                                        src={pet.ImageURL}
-                                        alt={pet.PetName}
-                                        fill
-                                        className="object-cover rounded-lg"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500 rounded-lg mb-4">
-                                    No Image
-                                </div>
-                            )}
-
-                            {/* Pet details */}
-                            <h2 className="text-2xl font-semibold">
-                                {pet.PetName} ({calculateAge(pet.Birthdate)} {pet.Gender?.charAt(0)})
-                            </h2>
-                            <p>{pet.Size} {pet.Species} - {pet.Breed}</p>
-                            <p>{pet.City} {pet.State}, {pet.Zip}</p>
-                            <p>{pet.PetDescription}</p>
-                        </Link>
-                    ))}
-                </div>
+                <p className="text-center text-red-500 mt-6">{errorMessage}</p>
+            ) : pets.length ? (
+                <>
+                    <p className="text-center font-medium mt-6">
+                        Found {pets.length} {pets.length === 1 ? "pet" : "pets"}
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-8 p-6">
+                        {pets.map((p: any) => (
+                            <Link
+                                key={p.PetID}
+                                href={`/pets/${p.PetID}`}
+                                className="w-80 border rounded-lg p-4 hover:shadow-lg transition text-center flex flex-col items-center"
+                            >
+                                {p.ImageURL ? (
+                                    <div className="relative w-full h-48 mb-3">
+                                        <Image src={p.ImageURL} alt={p.PetName} fill className="object-cover rounded" />
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center rounded mb-3">
+                                        No Image
+                                    </div>
+                                )}
+                                <h2 className="text-xl font-semibold">
+                                    {p.PetName} ({calculateAge(p.Birthdate)} {p.Gender?.[0]})
+                                </h2>
+                                <p className="text-sm text-gray-600">{p.Size} {p.Species} – {p.Breed}</p>
+                                <p className="text-sm text-gray-600">{p.City}, {p.State} {p.Zip}</p>
+                                <p className="text-sm mt-1 line-clamp-2">{p.PetDescription}</p>
+                            </Link>
+                        ))}
+                    </div>
+                </>
             ) : (
-                // Empty state message
-                <p className="text-center">No pets</p>
+                <p className="text-center text-gray-500 mt-10">No pets match your filters.</p>
             )}
         </div>
     );
