@@ -1,31 +1,27 @@
-"use server"
+"use server";
 
-import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
-import { createClient } from "@/utils/supabase/server"
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
 
 export async function login(formData: FormData) {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
-    const data = {
+    const { error } = await supabase.auth.signInWithPassword({
         email: formData.get("email") as string,
         password: formData.get("password") as string,
-    }
-
-    const { error } = await supabase.auth.signInWithPassword(data)
+    });
 
     if (error) {
-        console.error("Login error:", error.message)
-        return { error: error.message } // don't redirect on error
+        return { error: error.message };
     }
 
-    console.log(" Login successful")
-    revalidatePath("/", "layout")
-    redirect("/profile")
+    revalidatePath("/", "layout");
+    redirect("/profile");
 }
 
-export async function signup(formData: FormData) {
-    const supabase = await createClient()
+export async function signup(formData: FormData): Promise<{ error?: string }> {
+    const supabase = await createClient();
 
     const data = {
         accountType: formData.get("accountType") as string,
@@ -38,18 +34,20 @@ export async function signup(formData: FormData) {
         phone: formData.get("phone") as string,
         email: formData.get("email") as string,
         password: formData.get("password") as string,
-    }
+    };
 
+    // 1. Sign up user in Supabase Auth
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-    })
+    });
 
     if (signUpError) {
-        console.error("Signup error:", signUpError.message)
-        return { error: signUpError.message }
+        console.error("Signup error:", signUpError.message);
+        return { error: signUpError.message };
     }
 
+    // 2. If user exists, create profile in Profile table
     if (authData?.user) {
         const { error: profileError } = await supabase
             .from("Profile")
@@ -66,33 +64,27 @@ export async function signup(formData: FormData) {
                     Phone: data.phone,
                     ProfileEmail: data.email,
                 },
-            ])
+            ]);
 
         if (profileError) {
-            console.error("Profile insert error:", profileError.message)
-            return { error: profileError.message }
+            console.error("Profile insert error:", profileError.message);
+            return { error: profileError.message };
         }
 
-        console.log("Profile successfully created")
+        console.log("Profile successfully created");
     } else {
-        console.warn("Profile not created: no user returned from signup")
+        console.warn("Profile not created: no user returned from signup");
+        return {};
     }
 
-    revalidatePath("/", "layout")
-    redirect("/profile")
+    // 3. Revalidate UI + redirect user
+    revalidatePath("/", "layout");
+    redirect("/profile");
 }
 
 export async function logout() {
-    const supabase = await createClient()
-
-    const { error } = await supabase.auth.signOut()
-
-    if (error) {
-        console.error("Logout error:", error.message)
-        return { error: error.message }
-    }
-
-    console.log("Logged out successfully")
-    revalidatePath("/", "layout")
-    redirect("/login")
+    const supabase = await createClient();
+    await supabase.auth.signOut(); // ← await ensures cookie is cleared
+    revalidatePath("/", "layout");
+    redirect("/login");
 }

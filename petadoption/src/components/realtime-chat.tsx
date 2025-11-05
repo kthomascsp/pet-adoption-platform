@@ -9,7 +9,7 @@ interface RealtimeChatProps {
 }
 
 export const RealtimeChat: React.FC<RealtimeChatProps> = ({ currentUserId }) => {
-    const { messages, sendMessage } = useRealtimeChat();
+    const { messages, sendMessage, userNames } = useRealtimeChat();
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -24,23 +24,26 @@ export const RealtimeChat: React.FC<RealtimeChatProps> = ({ currentUserId }) => 
 
     return (
         <div className="flex flex-col h-[80vh] w-full max-w-3xl bg-white rounded-lg shadow p-6">
-            {/* Header */}
             <h2 className="text-2xl font-semibold mb-4 border-b pb-2 text-center">
                 Open Forum Test
             </h2>
 
-            {/* Message List */}
             <div className="flex-1 overflow-y-auto space-y-4">
                 {messages.length === 0 ? (
                     <p className="text-gray-500 text-center italic mt-4">
                         No posts yet. Be the first to start the discussion!
                     </p>
                 ) : (
-                    messages.map((msg) => <ChatMessageItem key={msg.id} message={msg} />)
+                    messages.map((msg) => (
+                        <ChatMessageItem
+                            key={msg.id}
+                            message={msg}
+                            userName={userNames[msg.senderId]}
+                        />
+                    ))
                 )}
             </div>
 
-            {/* Input Form */}
             <form
                 onSubmit={handleSubmit}
                 className="mt-4 flex items-center border-t pt-4 gap-2"

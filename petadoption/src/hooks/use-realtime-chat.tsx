@@ -2,75 +2,97 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/client';
 
 export interface ChatMessage {
-  id: number;
-  senderId: string;
-  content: string;
-  messageDateTime: string;
+    id: number;
+    senderId: string;
+    content: string;
+    messageDateTime: string;
 }
 
 export function useRealtimeChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [userNames, setUserNames] = useState<Record<string, string>>({});
 
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-          .from('message')
-          .select(`
+    useEffect(() => {
+        const fetchMessages = async () => {
+            const { data, error } = await supabase
+                .from('message')
+                .select(`
           id: MessageID,
           senderId: SenderID,
           content: Content,
           messageDateTime: MessageDateTime
         `)
-          .order('MessageDateTime', { ascending: true });
+                .order('MessageDateTime', { ascending: true });
 
-      console.log('Fetched messages:', data, error);
-      if (error) console.error('Fetch error:', error);
-      else setMessages(data || []);
-    };
-    fetchMessages();
-  }, []);
-
-
-  useEffect(() => {
-    console.log('Subscribing to realtime...');
-    const channel = supabase
-        .channel('public:message')
-        .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'message' },
-            (payload) => {
-              console.log('Realtime payload:', payload);
-              const m = payload.new as any;
-              const newMessage: ChatMessage = {
-                id: m.MessageID,
-                senderId: m.SenderID,
-                content: m.Content,
-                messageDateTime: m.MessageDateTime,
-              };
-              setMessages((prev) => [...prev, newMessage]);
+            if (error) {
+                console.error('Fetch error:', error);
+                return;
             }
-        )
-        .subscribe((status) => console.log('Subscription status:', status));
 
-    return () => {
-      console.log('Unsubscribed from realtime');
-      channel.unsubscribe();
+            setMessages(data || []);
+            const senderIds = [...new Set(data?.map(m => m.senderId))];
+
+            if (senderIds.length > 0) {
+                const { data: profiles } = await supabase
+                    .from('Profile')
+                    .select('ProfileID, ProfileName, LastName')
+                    .in('ProfileID', senderIds);
+
+                const nameMap = Object.fromEntries(
+                    profiles?.map(p => [p.ProfileID, `${p.ProfileName} ${p.LastName}`.trim()]) ?? []
+                );
+                setUserNames(nameMap);
+            }
+        };
+        fetchMessages();
+    }, []);
+
+    useEffect(() => {
+        const channel = supabase
+            .channel('public:message')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'message' },
+                async (payload) => {
+                    const m = payload.new as any;
+                    const senderId = m.SenderID;
+
+                    if (!userNames[senderId]) {
+                        const { data: profile } = await supabase
+                            .from('Profile')
+                            .select('ProfileName, LastName')
+                            .eq('ProfileID', senderId)
+                            .single();
+
+                        if (profile) {
+                            const fullName = `${profile.ProfileName} ${profile.LastName}`.trim();
+                            setUserNames(prev => ({ ...prev, [senderId]: fullName }));
+                        }
+                    }
+
+                    const newMessage: ChatMessage = {
+                        id: m.MessageID,
+                        senderId: m.SenderID,
+                        content: m.Content,
+                        messageDateTime: m.MessageDateTime,
+                    };
+                    setMessages(prev => [...prev, newMessage]);
+                }
+            )
+            .subscribe();
+
+        return () => { channel.unsubscribe(); };
+    }, [userNames]);
+
+    const sendMessage = async (senderId: string, content: string) => {
+        await supabase.from('message').insert([
+            {
+                SenderID: senderId,
+                Content: content,
+                MessageDateTime: new Date().toISOString(),
+            },
+        ]);
     };
-  }, []);
 
-
-  const sendMessage = async (senderId: string, content: string) => {
-    console.log('Inserting message:', { senderId, content });
-    const { data, error } = await supabase.from('message').insert([
-      {
-        SenderID: senderId,
-        Content: content,
-        MessageDateTime: new Date().toISOString(),
-      },
-    ]);
-    console.log('Insert result:', { data, error });
-  };
-
-  return { messages, sendMessage };
+    return { messages, sendMessage, userNames };
 }

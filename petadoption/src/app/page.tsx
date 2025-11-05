@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const Page = async ({ searchParams }: { searchParams?: Record<string, string> }) => {
     // Create Supabase client
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Allow a dynamic number of pets (default = 3)
     const petLimit = parseInt(searchParams?.count || "3", 10);

@@ -1,9 +1,17 @@
 'use client';
 
 import { RealtimeChat } from '@/components/realtime-chat';
+import { useSupabaseUser } from '@/hooks/use-supabase-user';
 
 export default function Page() {
-    const currentUserId = 'c2f9e70f-8b47-42a1-9e59-17cb5e5c80e9'; // Example user
+    const currentUserId = useSupabaseUser();
+
+    // Optional: show loading or fallback
+    if (!currentUserId) {
+        return <p className="text-xl">Loading your profile…</p>;
+    }
+
+    //console.log("currentUserId: " + currentUserId);
 
     return (
         <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-50">

@@ -1,76 +1,86 @@
-"use client"; // This page is a client component
+"use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // ✅ Import router for redirects
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { login, signup } from "./actions"; // ✅ logout not needed here
+import { login, signup } from "./actions";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-    const [user, setUser] = useState<any>(null);
-    const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter(); // ✅ router instance for redirects
+    const router = useRouter();
+    const { setUser } = useAuth(); // ← get setUser from AuthContext
+    const supabase = createClient();
 
     useEffect(() => {
-        const supabase = createClient();
+        let mounted = true;
 
-        const getUserAndProfile = async () => {
+        const checkUser = async () => {
             try {
-                // Get current user
-                const { data: userData, error: userError } = await supabase.auth.getUser();
-                if (userError) throw userError;
+                const { data, error } = await supabase.auth.getSession();
+                if (error) throw error;
 
-                const currentUser = userData?.user ?? null;
-                setUser(currentUser);
+                const currentUser = data.session?.user ?? null;
 
-                // If user exists, redirect to /profile
-                if (currentUser) {
-                    router.push("/profile");
-                    return;
+                if (mounted) {
+                    if (currentUser?.email) {
+                        setUser({ email: currentUser.email }); // ← update context immediately
+                        router.replace("/profile");
+                    } else {
+                        setLoading(false);
+                    }
                 }
-
-                setLoading(false);
-            } catch (err) {
-                console.error("Error fetching user:", err);
-                setLoading(false);
+            } catch (err: unknown) {
+                if (err instanceof Error) {
+                    console.error("Auth check error:", err.message);
+                } else {
+                    console.error("Auth check error:", err);
+                }
+                if (mounted) setLoading(false);
             }
         };
 
-        getUserAndProfile();
+        checkUser();
 
-        // Listen for auth state changes
-        const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-            const loggedInUser = session?.user ?? null;
-            setUser(loggedInUser);
-            if (loggedInUser) router.push("/profile"); // Redirect after login
+        const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
+            if (mounted) {
+                if (session?.user?.email) {
+                    setUser({ email: session.user.email });
+                    router.replace("/profile");
+                }
+            }
         });
 
-        // Cleanup on unmount
         return () => {
-            authListener.subscription.unsubscribe();
+            mounted = false;
+            listener.subscription.unsubscribe();
         };
-    }, [router]);
+    }, [router, setUser, supabase]);
 
-    // Loading state
     if (loading) {
         return <p className="text-center mt-10 text-lg">Loading...</p>;
     }
 
-    // If no user, show login/signup forms
     return (
         <div className="flex items-start justify-evenly p-8 flex-wrap">
             {/* Login Form */}
             <div className="flex flex-col justify-center items-center m-4">
                 <h1 className="text-2xl m-4 font-semibold">Login</h1>
                 <form
-                    action={async (formData) => {
+                    onSubmit={async (e) => {
+                        e.preventDefault();
+                        setError(null);
+
+                        const formData = new FormData(e.currentTarget);
                         const result = await login(formData);
+
                         if (result?.error) {
                             setError(result.error);
                         } else {
-                            // Redirect after successful login
-                            router.push("/profile");
+                            const email = formData.get("email") as string;
+                            setUser({ email }); // ← update context immediately
+                            router.replace("/profile");
                         }
                     }}
                     className="flex flex-col gap-2 border p-5 rounded shadow w-[300px]"
@@ -99,17 +109,29 @@ export default function LoginPage() {
                 </form>
             </div>
 
-            {/* Separator */}
             <p className="text-2xl font-semibold mt-16">or</p>
 
             {/* Signup Form */}
             <div className="flex flex-col justify-center items-center m-4">
                 <h1 className="text-2xl m-4 font-semibold">Sign Up</h1>
                 <form
-                    action={signup}
+                    onSubmit={async (e) => {
+                        e.preventDefault();
+
+                        const formData = new FormData(e.currentTarget);
+                        const result = await signup(formData);
+
+                        if (result?.error) {
+                            setError(result.error);
+                        } else {
+                            const email = formData.get("email") as string;
+                            setUser({ email }); // ← update context immediately
+                            router.replace("/profile");
+                        }
+                    }}
                     className="flex flex-col gap-2 border p-5 rounded shadow w-[300px]"
                 >
-                    {/* Account Type Selection */}
+                    {/* Account Type */}
                     <div className="flex justify-center items-center m-2">
                         <h2 className="text-xl font-medium">Select Account Type</h2>
                     </div>
@@ -119,7 +141,7 @@ export default function LoginPage() {
                                 type="radio"
                                 name="accountType"
                                 value="shelter"
-                                className="h-5 w-5 text-blue-600 focus:ring-blue-500"
+                                className="h-5 w-5 text-blue-600"
                                 required
                             />
                             <span className="text-lg">Shelter</span>
@@ -129,14 +151,13 @@ export default function LoginPage() {
                                 type="radio"
                                 name="accountType"
                                 value="adopter"
-                                className="h-5 w-5 text-blue-600 focus:ring-blue-500"
+                                className="h-5 w-5 text-blue-600"
                                 required
                             />
                             <span className="text-lg">Adopter</span>
                         </label>
                     </div>
 
-                    {/* Signup Inputs */}
                     <input
                         type="text"
                         name="firstname"
@@ -201,7 +222,6 @@ export default function LoginPage() {
                         required
                     />
 
-                    {/* Signup Submit Button */}
                     <button
                         type="submit"
                         className="bg-green-500 text-white p-3 rounded hover:bg-green-600 w-full mt-2"
