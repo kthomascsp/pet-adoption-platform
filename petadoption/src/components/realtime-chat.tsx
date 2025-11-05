@@ -1,3 +1,10 @@
+/**
+ * Renders the real-time chat interface.
+ * - Displays a scrollable list of messages.
+ * - Submits new messages to the database.
+ * - Uses the `useRealtimeChat` hook to listen for updates.
+ */
+
 'use client';
 
 import React, { FormEvent } from 'react';
@@ -11,6 +18,12 @@ interface RealtimeChatProps {
 export const RealtimeChat: React.FC<RealtimeChatProps> = ({ currentUserId }) => {
     const { messages, sendMessage, userNames } = useRealtimeChat();
 
+    /**
+     * Handles form submission:
+     * - Prevents default reload
+     * - Sends a new message via Supabase
+     * - Clears the input field
+     */
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const form = e.target as HTMLFormElement;
@@ -28,6 +41,7 @@ export const RealtimeChat: React.FC<RealtimeChatProps> = ({ currentUserId }) => 
                 Open Forum Test
             </h2>
 
+            {/* Message feed */}
             <div className="flex-1 overflow-y-auto space-y-4">
                 {messages.length === 0 ? (
                     <p className="text-gray-500 text-center italic mt-4">
@@ -44,10 +58,8 @@ export const RealtimeChat: React.FC<RealtimeChatProps> = ({ currentUserId }) => 
                 )}
             </div>
 
-            <form
-                onSubmit={handleSubmit}
-                className="mt-4 flex items-center border-t pt-4 gap-2"
-            >
+            {/* New message input */}
+            <form onSubmit={handleSubmit} className="mt-4 flex items-center border-t pt-4 gap-2">
                 <input
                     name="message"
                     type="text"

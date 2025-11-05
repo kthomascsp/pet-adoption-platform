@@ -1,3 +1,10 @@
+/**
+ * Handles the login and signup functionality for users.
+ * - Redirects authenticated users to their profile automatically.
+ * - Provides forms for both logging in and creating a new account.
+ * - Integrates with Supabase Auth for authentication and user session management.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,9 +17,10 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
-    const { setUser } = useAuth(); // ← get setUser from AuthContext
+    const { setUser } = useAuth(); // Updates user context on login/signup
     const supabase = createClient();
 
+    // Check current authentication session on mount
     useEffect(() => {
         let mounted = true;
 
@@ -25,30 +33,26 @@ export default function LoginPage() {
 
                 if (mounted) {
                     if (currentUser?.email) {
-                        setUser({ email: currentUser.email }); // ← update context immediately
+                        // If already logged in, update context and redirect to profile
+                        setUser({ email: currentUser.email });
                         router.replace("/profile");
                     } else {
                         setLoading(false);
                     }
                 }
             } catch (err: unknown) {
-                if (err instanceof Error) {
-                    console.error("Auth check error:", err.message);
-                } else {
-                    console.error("Auth check error:", err);
-                }
+                console.error("Auth check error:", err);
                 if (mounted) setLoading(false);
             }
         };
 
         checkUser();
 
+        // Listen for authentication state changes
         const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
-            if (mounted) {
-                if (session?.user?.email) {
-                    setUser({ email: session.user.email });
-                    router.replace("/profile");
-                }
+            if (mounted && session?.user?.email) {
+                setUser({ email: session.user.email });
+                router.replace("/profile");
             }
         });
 
@@ -64,7 +68,7 @@ export default function LoginPage() {
 
     return (
         <div className="flex items-start justify-evenly p-8 flex-wrap">
-            {/* Login Form */}
+            {/* ---------- Login Form ---------- */}
             <div className="flex flex-col justify-center items-center m-4">
                 <h1 className="text-2xl m-4 font-semibold">Login</h1>
                 <form
@@ -79,12 +83,13 @@ export default function LoginPage() {
                             setError(result.error);
                         } else {
                             const email = formData.get("email") as string;
-                            setUser({ email }); // ← update context immediately
+                            setUser({ email });
                             router.replace("/profile");
                         }
                     }}
                     className="flex flex-col gap-2 border p-5 rounded shadow w-[300px]"
                 >
+                    {/* Email and password fields */}
                     <input
                         type="email"
                         name="email"
@@ -111,7 +116,7 @@ export default function LoginPage() {
 
             <p className="text-2xl font-semibold mt-16">or</p>
 
-            {/* Signup Form */}
+            {/* ---------- Signup Form ---------- */}
             <div className="flex flex-col justify-center items-center m-4">
                 <h1 className="text-2xl m-4 font-semibold">Sign Up</h1>
                 <form
@@ -125,13 +130,13 @@ export default function LoginPage() {
                             setError(result.error);
                         } else {
                             const email = formData.get("email") as string;
-                            setUser({ email }); // ← update context immediately
+                            setUser({ email });
                             router.replace("/profile");
                         }
                     }}
                     className="flex flex-col gap-2 border p-5 rounded shadow w-[300px]"
                 >
-                    {/* Account Type */}
+                    {/* Account type selection */}
                     <div className="flex justify-center items-center m-2">
                         <h2 className="text-xl font-medium">Select Account Type</h2>
                     </div>
@@ -158,69 +163,16 @@ export default function LoginPage() {
                         </label>
                     </div>
 
-                    <input
-                        type="text"
-                        name="firstname"
-                        placeholder="First Name"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
-                    <input
-                        type="text"
-                        name="lastname"
-                        placeholder="Last Name"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
-                    <input
-                        type="text"
-                        name="address"
-                        placeholder="Address"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
-                    <input
-                        type="text"
-                        name="city"
-                        placeholder="City"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
-                    <input
-                        type="text"
-                        name="state"
-                        placeholder="State"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
-                    <input
-                        type="text"
-                        name="zip"
-                        placeholder="Zip"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
-                    <input
-                        type="text"
-                        name="phone"
-                        placeholder="Phone"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        className="border p-3 rounded w-full"
-                        required
-                    />
+                    {/* User details form fields */}
+                    <input type="text" name="firstname" placeholder="First Name" className="border p-3 rounded w-full" required />
+                    <input type="text" name="lastname" placeholder="Last Name" className="border p-3 rounded w-full" required />
+                    <input type="text" name="address" placeholder="Address" className="border p-3 rounded w-full" required />
+                    <input type="text" name="city" placeholder="City" className="border p-3 rounded w-full" required />
+                    <input type="text" name="state" placeholder="State" className="border p-3 rounded w-full" required />
+                    <input type="text" name="zip" placeholder="Zip" className="border p-3 rounded w-full" required />
+                    <input type="text" name="phone" placeholder="Phone" className="border p-3 rounded w-full" required />
+                    <input type="email" name="email" placeholder="Email" className="border p-3 rounded w-full" required />
+                    <input type="password" name="password" placeholder="Password" className="border p-3 rounded w-full" required />
 
                     <button
                         type="submit"

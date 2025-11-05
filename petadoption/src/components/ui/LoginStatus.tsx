@@ -1,3 +1,10 @@
+/**
+ * Displays the user’s authentication status in the header.
+ * - Shows a "Login / Sign Up" link when not logged in.
+ * - Displays the user’s email and a Logout button when logged in.
+ * - Keeps state synced with Supabase Auth in real time.
+ */
+
 "use client";
 
 import { useEffect } from "react";
@@ -9,6 +16,7 @@ export default function LoginStatus() {
     const { user, setUser, logout } = useAuth();
     const supabase = createClient();
 
+    // Listen for changes in authentication state
     useEffect(() => {
         const fetchSession = async () => {
             const { data } = await supabase.auth.getSession();
@@ -21,6 +29,7 @@ export default function LoginStatus() {
 
         fetchSession();
 
+        // Subscribe to auth state changes
         const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user?.email) {
                 setUser({ email: session.user.email });
@@ -29,11 +38,13 @@ export default function LoginStatus() {
             }
         });
 
+        // Clean up subscription on unmount
         return () => {
             authListener?.subscription.unsubscribe();
         };
     }, [supabase, setUser]);
 
+    // If no user is logged in, show login/signup link
     if (!user) {
         return (
             <Link href="/login" className="text-sm font-medium hover:underline">
@@ -42,11 +53,12 @@ export default function LoginStatus() {
         );
     }
 
+    // If logged in, show user email and logout button
     return (
         <div className="flex items-center gap-4">
             <span className="text-sm">Hello, {user.email}</span>
             <button
-                onClick={logout} // just call context logout
+                onClick={logout}
                 className="text-sm underline hover:text-red-500"
             >
                 Logout

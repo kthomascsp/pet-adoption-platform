@@ -1,3 +1,11 @@
+/**
+ * Displays the authenticated user's profile information.
+ * - Fetches user authentication state via Supabase.
+ * - Retrieves the user's profile from the "Profile" table.
+ * - Redirects to /login if the user is not logged in.
+ * - Updates in real-time on auth state changes.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,15 +22,17 @@ export default function ProfilePage() {
         const supabase = createClient();
 
         const fetchUserData = async () => {
+            // Get authenticated user
             const { data: userData } = await supabase.auth.getUser();
             const currentUser = userData?.user ?? null;
             setUser(currentUser);
 
             if (!currentUser) {
-                router.push("/login");
+                router.push("/login"); // Redirect if not logged in
                 return;
             }
 
+            // Fetch profile data for current user
             const { data: profileData } = await supabase
                 .from("Profile")
                 .select("*")
@@ -35,6 +45,7 @@ export default function ProfilePage() {
 
         fetchUserData();
 
+        // Listen for auth state changes
         const { data: authListener } = supabase.auth.onAuthStateChange(
             (_event, session) => {
                 setUser(session?.user ?? null);
@@ -46,7 +57,7 @@ export default function ProfilePage() {
         );
 
         return () => {
-            authListener?.subscription.unsubscribe();
+            authListener?.subscription.unsubscribe(); // Clean up listener
         };
     }, [router]);
 
