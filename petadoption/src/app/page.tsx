@@ -2,18 +2,25 @@ import PetCard from "@/components/PetCard";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
+import { Database } from "@/types/supabase";
+
 
 const Page = async ({ searchParams }: { searchParams?: Record<string, string> }) => {
     // Create Supabase client
     const supabase = await createClient();
 
     // Allow a dynamic number of pets (default = 3)
-    const petLimit = parseInt(searchParams?.count || "3", 10);
+    const params = await searchParams;
+    const petLimit = parseInt(params?.count || "3", 10);
+
+    // Define a type based on the Pets table in the database
+    type Pet = Database["public"]["Views"]["pet_search_view"]["Row"];
 
     // Fetch random pets from the Supabase function
-    const { data: pets, error } = await supabase.rpc("get_random_pets", {
-        limit_count: petLimit,
-    });
+    const { data: pets, error } = await supabase.rpc(
+        "get_random_pets",
+        { limit_count: petLimit }
+    );
 
     if (error) {
         console.error("Error fetching pets:", error.message);
@@ -45,9 +52,9 @@ const Page = async ({ searchParams }: { searchParams?: Record<string, string> })
                                 className="transform transition-transform hover:scale-105 hover:shadow-lg rounded-lg"
                             >
                                 <PetCard
-                                    name={pet.PetName}
-                                    description={pet.PetDescription}
-                                    imageUrl={pet.ImageURL || "/dog.jpeg"}
+                                    name={pet.PetName ?? "Unnamed Pet"}
+                                    description={pet.PetDescription ?? "No description available."}
+                                    imageUrl={pet.ImageURL || ""}
                                 />
                             </Link>
                         ))

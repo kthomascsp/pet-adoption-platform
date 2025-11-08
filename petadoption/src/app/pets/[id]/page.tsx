@@ -6,10 +6,28 @@ import Image from "next/image";
 export default async function PetPage({params}: {params:{id:string}}) {
     const supabase = await createClient();
 
-    const{data: pet, error} = await supabase.from("pet_search_view").select("*").eq("PetID", params.id).single();
+    const{data: pet, error} = await supabase
+        .from("pet_search_view")
+        .select("*")
+        .eq("PetID", params.id)
+        .single();
 
-    const { data: shelter, error: shelterError } = 
-    await supabase.from("Profile").select("ProfileID, ProfileName, Address, City, State, Zip").eq("ProfileID", pet.ProfileID).single();
+    const imageUrl : string = pet !== null ? pet.ImageURL !== null ? pet.ImageURL !== "NULL" ? pet.ImageURL : "/dog-generic.png" : "/dog-generic.png" : "/dog-generic.png";
+
+    if (!pet?.ProfileID) {
+        return (
+            <div className="text-red-500 text-center text-5xl">
+                Shelter information not available.
+            </div>
+        );
+    }
+
+    const { data: shelter, error: shelterError } =
+        await supabase
+            .from("Profile")
+            .select("ProfileID, ProfileName, Address, City, State, Zip")
+            .eq("ProfileID", pet.ProfileID)
+            .single();
 
     if (shelterError || !shelter) {
         return <div className="text-red-500 text-center text-5xl">Shelter not found?</div>;
@@ -59,7 +77,13 @@ export default async function PetPage({params}: {params:{id:string}}) {
     return(
         <div className="flex flex-col items-center border-collapse justify-center p-6">
             <h1 className="text-4xl font-bold m-6">{pet.PetName}</h1>
-            <Image className="m-6" src={pet.ImageURL} alt={pet.PetName} width={300} height={300}/>
+            <Image
+                className="m-6 rounded-lg"
+                src={imageUrl}
+                alt={pet.PetName || "Pet photo"}
+                width={300}
+                height={300}
+            />
             {coordinates ? (
                             <MapProviderWrapper>
                                 <MapView
@@ -87,7 +111,7 @@ export default async function PetPage({params}: {params:{id:string}}) {
                 </tr>
                 <tr>
                     <td className="p-4 font-semibold border">Age</td>
-                    <td className="p-4 border text-center">{calculateAge(pet.Birthdate)}</td>
+                    <td className="p-4 border text-center">{calculateAge(pet.Birthdate || "Unknown")}</td>
                 </tr>
                 <tr>
                     <td className="p-4 font-semibold border ">Size</td>

@@ -7,6 +7,7 @@
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { Database } from "@/types/supabase";
 
 /**
  * Initializes a Supabase client for server-side contexts.
@@ -16,7 +17,7 @@ import { cookies } from "next/headers";
 export async function createClient() {
     const cookieStore = await cookies(); // Next.js 14: must be awaited
 
-    return createServerClient(
+    return createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
