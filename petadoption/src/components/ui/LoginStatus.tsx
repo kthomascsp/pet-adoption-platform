@@ -56,7 +56,10 @@ export default function LoginStatus() {
     // If logged in, show user email and logout button
     return (
         <div className="flex items-center gap-4">
-            <span className="text-sm">Hello, {user.email}</span>
+            <a href="/profile">
+                <span className="text-sm">Hello, {user.email}</span>
+            </a>
+            
             <button
                 onClick={logout}
                 className="text-sm underline hover:text-red-500"

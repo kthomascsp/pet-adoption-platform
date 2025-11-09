@@ -16,6 +16,7 @@ export default function ProfilePage() {
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -61,6 +62,39 @@ export default function ProfilePage() {
         };
     }, [router]);
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setProfile((prev: any) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleSave = async() => {
+        if(!profile || !user) return;
+        setSaving(true);
+        const supabase = createClient();
+
+        const {error} = await supabase.from("Profile").update({
+            ProfileName: profile.ProfileName,
+            LastName: profile.LastName,
+            ProfileEmail: profile.ProfileEmail,
+            Phone: profile.Phone,
+            Address: profile.Address,
+            City: profile.City,
+            State: profile.State,
+            Zip: profile.Zip,
+            ProfileType: profile.ProfileType,
+            ProfileDescription: profile.ProfileDescription,
+        }).eq("ProfileID", user.id);
+
+        setSaving(false);
+
+        if(error) {
+            alert("Problem with saving")
+        }
+    };
+
     if (loading) return <p className="text-center mt-10 text-lg">Loading...</p>;
 
     return (
@@ -70,17 +104,36 @@ export default function ProfilePage() {
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl border rounded p-6 shadow bg-white text-black">
-                <div><strong>First Name:</strong> {profile?.ProfileName || "-"}</div>
-                <div><strong>Last Name:</strong> {profile?.LastName || "-"}</div>
-                <div><strong>Email:</strong> {user?.email}</div>
-                <div><strong>Phone:</strong> {profile?.Phone || "-"}</div>
-                <div><strong>Address:</strong> {profile?.Address || "-"}</div>
-                <div><strong>City:</strong> {profile?.City || "-"}</div>
-                <div><strong>State:</strong> {profile?.State || "-"}</div>
-                <div><strong>Zip:</strong> {profile?.Zip || "-"}</div>
-                <div><strong>Account Type:</strong> {profile?.ProfileType || "-"}</div>
-                <div><strong>Description:</strong> {profile?.ProfileDescription || "-"}</div>
+                <div><strong>First Name:</strong> <input type="text" name="ProfileName" placeholder={`${profile?.ProfileName || ""}`} 
+                value={profile?.ProfileName || ""} onChange={handleChange}/></div>
+                <div><strong>Last Name:</strong> <input type="text" name="LastName" placeholder={`${profile?.LastName || ""}`} 
+                value={profile?.LastName || ""} onChange={handleChange}/></div>
+                <div><strong>Email:</strong> <input type="text" name="ProfileEmail" placeholder={`${profile?.ProfileEmail || ""}`} 
+                value={profile?.ProfileEmail || ""} onChange={handleChange}/></div>
+                <div><strong>Phone:</strong> <input type="text" name="Phone" placeholder={`${profile?.Phone || ""}`} 
+                value={profile?.Phone || ""} onChange={handleChange}/></div>
+                <div><strong>Address:</strong> <input type="text" name="Address" placeholder={`${profile?.Address || ""}`} 
+                value={profile?.Address || ""} onChange={handleChange}/></div>
+                <div><strong>City:</strong> <input type="text" name="City" placeholder={`${profile?.City || ""}`} 
+                value={profile?.City || ""} onChange={handleChange}/></div>
+                <div><strong>State:</strong> <input type="text" name="State" placeholder={`${profile?.State || ""}`} 
+                value={profile?.State || ""} onChange={handleChange}/></div>
+                <div><strong>Zip:</strong> <input type="text" name="Zip" placeholder={`${profile?.Zip || ""}`} 
+                value={profile?.Zip || ""} onChange={handleChange}/></div>
+                <div>
+                    <strong><label htmlFor="ProfileType">Account Type:</label></strong>
+                    <select id="ProfileType" name="ProfileType" value={profile?.ProfileType || ""} onChange={handleChange}>
+                        <option value="">-- Select --</option>
+                        <option value="adopter">Adopter</option>
+                        <option value="shelter">Shelter</option>
+                    </select>
+                </div>
+                <div><strong>Description:</strong> <input type="text" name="ProfileDescription" placeholder={`${profile?.ProfileDescription || ""}`} 
+                value={profile?.ProfileDescription || ""} onChange={handleChange}/></div>
             </div>
+            <button onClick={handleSave} disabled={saving} className="m-6 py-6 px-20 bg-green-400 hover:bg-green-600 border rounded cursor-pointer">
+                {saving ? "Saving" : "Saved"}
+            </button>
         </div>
     );
 }
