@@ -70,30 +70,42 @@ export default function ProfilePage() {
         }));
     };
 
-    const handleSave = async() => {
-        if(!profile || !user) return;
-        setSaving(true);
-        const supabase = createClient();
+    const handleSave = async () => {
+    if (!profile || !user) return;
+    setSaving(true);
+    const supabase = createClient();
 
-        const {error} = await supabase.from("Profile").update({
-            ProfileName: profile.ProfileName,
-            LastName: profile.LastName,
-            ProfileEmail: profile.ProfileEmail,
-            Phone: profile.Phone,
-            Address: profile.Address,
-            City: profile.City,
-            State: profile.State,
-            Zip: profile.Zip,
-            ProfileType: profile.ProfileType,
-            ProfileDescription: profile.ProfileDescription,
-        }).eq("ProfileID", user.id);
+    console.log("Attempting to save profile for user:", user.id);
 
-        setSaving(false);
+    const { data, error, status } = await supabase
+        .from("Profile")
+        .update({
+        ProfileName: profile.ProfileName,
+        LastName: profile.LastName,
+        ProfileEmail: profile.ProfileEmail,
+        Phone: profile.Phone,
+        Address: profile.Address,
+        City: profile.City,
+        State: profile.State,
+        Zip: profile.Zip,
+        ProfileType: profile.ProfileType,
+        ProfileDescription: profile.ProfileDescription,
+        })
+        .eq("ProfileID", user.id) // change this if needed
+        .select();
 
-        if(error) {
-            alert("Problem with saving")
-        }
+    console.log("Update result:", { data, error, status });
+
+    setSaving(false);
+
+    if (error) {
+        alert("Error saving profile: " + error.message);
+    }
+    else {
+        alert("Profile updated successfully!");
+    }
     };
+
 
     if (loading) return <p className="text-center mt-10 text-lg">Loading...</p>;
 
