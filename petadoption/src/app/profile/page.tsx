@@ -11,6 +11,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import ProfileAvatar from "@/components/ProfileAvatar";
 
 export default function ProfilePage() {
     const [user, setUser] = useState<any>(null);
@@ -40,7 +41,16 @@ export default function ProfilePage() {
                 .eq("ProfileID", currentUser.id)
                 .single();
 
-            setProfile(profileData);
+            const { data: imageData } = await supabase
+                .from("Image")
+                .select("URL")
+                .eq("OwnerID", currentUser.id)
+                .eq("ImageType", "profile")
+                .single();
+
+            setProfile({ ...profileData, ImageURL: imageData?.URL || null });
+
+            //setProfile(profileData);
             setLoading(false);
         };
 
@@ -109,11 +119,86 @@ export default function ProfilePage() {
 
     if (loading) return <p className="text-center mt-10 text-lg">Loading...</p>;
 
+    // Allow the user to upload a profile picture
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        //alert("Uploading...");
+        const supabase = createClient();
+
+        // DEBUG - check the current user
+        const { data: userCheck } = await supabase.auth.getUser();
+        console.log("User ID:", user.id);
+        console.log("OwnerID being inserted:", user.id);
+
+        const file = event.target.files?.[0];
+        if (!file || !user) return;
+
+        //const filePath = file.name;
+        const cleanFileName = file.name.replace(/[^\w.-]/g, "_");
+        const filePath = `profiles/${user.id}/profile-picture.${file.name.split('.').pop()}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+            .from("ProfileImagesBucket")
+            .upload(filePath, file, { upsert: true });
+
+        if (uploadError) {
+            console.error("Storage upload error:", uploadError);
+            alert("Error uploading image: " + uploadError.message);
+            return;
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+            .from("ProfileImagesBucket")
+            .getPublicUrl(filePath);
+
+        const imageUrl = urlData.publicUrl;
+
+        const { error: deleteError } = await supabase
+            .from("Image")
+            .delete()
+            .eq("OwnerID", user.id)
+            .eq("ImageType", "profile");
+
+        if (deleteError) {
+            alert("Error deleting image: " + deleteError.message);
+        }
+
+        // Save new image record to the Image table
+        const { data: insertData, error: insertError } = await supabase
+            .from("Image")
+            .insert([
+                {
+                    OwnerID: user.id,
+                    ImageType: "profile",
+                    URL: imageUrl,
+                },
+            ]);
+
+        if (insertError) {
+            alert("Error saving image record: " + insertError.message);
+        } else {
+            alert("Profile picture updated successfully!");
+            console.log("Inserted image record:", insertData);
+
+            // Update UI with the new image
+            setProfile((prev: any) => ({ ...prev, ImageURL: imageUrl }));
+        }
+    };
+
+
     return (
         <div className="flex flex-col items-center justify-center p-8 space-y-6 mt-8">
             <h1 className="text-2xl font-semibold mb-4">
                 Welcome, {profile?.ProfileName || user?.email}!
             </h1>
+
+            <ProfileAvatar
+                profile={profile}
+                editable
+                size={128}
+                onImageUpdated={(newUrl) => setProfile((prev: any) => ({ ...prev, ImageURL: newUrl }))}
+                />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl border rounded p-6 shadow bg-white text-black">
                 <div><strong>First Name:</strong> <input type="text" name="ProfileName" placeholder={`${profile?.ProfileName || ""}`} 
