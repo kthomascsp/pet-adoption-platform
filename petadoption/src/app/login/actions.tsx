@@ -27,13 +27,14 @@ export async function login(formData: FormData) {
 
     // Refresh app layout and redirect to profile
     revalidatePath("/", "layout");
-    redirect("/profile");
+    //redirect("/profile");
+    return { success: true };
 }
 
 /**
  * Registers a new user in Supabase Auth and creates their profile record.
  */
-export async function signup(formData: FormData): Promise<{ error?: string }> {
+export async function signup(formData: FormData) {
     const supabase = await createClient();
 
     // Extract user data from form fields
@@ -91,7 +92,8 @@ export async function signup(formData: FormData): Promise<{ error?: string }> {
 
     // 3. Refresh app and redirect to profile page
     revalidatePath("/", "layout");
-    redirect("/profile");
+    //redirect("/profile");
+    return { success: true };
 }
 
 /**

@@ -81,13 +81,17 @@ export default function ProfileAvatar({
             className="relative"
             style={{ width: size, height: size }}
         >
-            <Image
-                src={profile?.ImageURL || "/shelter-generic.png"}
-                alt="Profile picture"
-                width={size}
-                height={size}
-                className="rounded-full object-cover border-2 border-gray-300"
-            />
+            {!profile?.ImageURL ? (
+                <div className="bg-gray-200 rounded-full animate-pulse" style={{ width: size, height: size }} />
+            ) : (
+                <Image
+                    src={profile?.ImageURL || "/shelter-generic.png"}
+                    alt="Profile picture"
+                    width={size}
+                    height={size}
+                    className="rounded-full object-cover border-2 border-gray-300"
+                />
+            )}
 
             {editable && (
                 <button

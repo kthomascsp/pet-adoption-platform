@@ -5,56 +5,111 @@
  * - Handles Supabase sign-out and redirects users after logout.
  */
 
+// AuthContext.tsx
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
-// Defines the shape of a user object (only email for now)
-type UserType = { email: string } | null;
+type UserType = {
+    id: string;
+    email: string;
+} | null;
+
+type ProfileType = {
+    ProfileName?: string;
+    ImageURL?: string | null;
+} | null;
 
 interface AuthContextType {
     user: UserType;
+    profile: ProfileType;
+    loading: boolean;
     setUser: (user: UserType) => void;
+    setProfile: (profile: ProfileType) => void;
     logout: () => Promise<void>;
 }
 
-// Create an authentication context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/**
- * Provider component that wraps the app and makes
- * authentication data/functions available to all components.
- */
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<UserType>(null); // Holds current user info
-    const supabase = createClient(); // Supabase client for auth operations
+    const [user, setUser] = useState<UserType>(null);
+    const [profile, setProfile] = useState<ProfileType>(null);
+    const [loading, setLoading] = useState(true);
+    const supabase = createClient();
     const router = useRouter();
 
-    /**
-     * Logs out the user:
-     * - Ends the Supabase session
-     * - Clears local user state
-     * - Redirects to the login page
-     */
+    const fetchProfile = async (userId: string) => {
+        const { data: profileData } = await supabase
+            .from("Profile")
+            .select("ProfileName")
+            .eq("ProfileID", userId)
+            .single();
+
+        const { data: imageData } = await supabase
+            .from("Image")
+            .select("URL")
+            .eq("OwnerID", userId)
+            .eq("ImageType", "profile")
+            .single();
+
+        setProfile({
+            ProfileName: profileData?.ProfileName || null,
+            ImageURL: imageData?.URL || null,
+        });
+    };
+
+    useEffect(() => {
+        const initAuth = async () => {
+            const { data } = await supabase.auth.getSession();
+            const sessionUser = data.session?.user;
+
+            if (sessionUser) {
+                setUser({ id: sessionUser.id, email: sessionUser.email ?? "" });
+                await fetchProfile(sessionUser.id);
+            } else {
+                setUser(null);
+                setProfile(null);
+            }
+            setLoading(false);
+        };
+
+        initAuth();
+
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+            async (_event, session) => {
+                const sessionUser = session?.user;
+                if (sessionUser) {
+                    setUser({ id: sessionUser.id, email: sessionUser.email ?? "" });
+                    await fetchProfile(sessionUser.id);
+                } else {
+                    setUser(null);
+                    setProfile(null);
+                }
+                setLoading(false);
+            }
+        );
+
+        return () => {
+            authListener.subscription.unsubscribe();
+        };
+    }, [supabase]);
+
     const logout = async () => {
         await supabase.auth.signOut();
         setUser(null);
+        setProfile(null);
         router.replace("/login");
     };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, logout }}>
+        <AuthContext.Provider value={{ user, profile, loading, setUser, setProfile, logout }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-/**
- * Custom hook for accessing authentication context.
- * Throws an error if used outside of AuthProvider.
- */
 export function useAuth() {
     const context = useContext(AuthContext);
     if (!context) {
