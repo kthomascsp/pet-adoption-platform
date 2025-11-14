@@ -5,7 +5,6 @@
  * - Keeps state synced with Supabase Auth in real time.
  */
 
-// LoginStatus.tsx
 "use client";
 
 import Link from "next/link";
