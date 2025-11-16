@@ -2,24 +2,42 @@ import MapProviderWrapper from "@/components/MapProviderWrapper";
 import MapView from "@/components/MapView";
 import {createClient} from "@/utils/supabase/server";
 
-export default async function ShelterPage({params}: {params:{id:string}}) {
+
+type PageProps = {
+    params: Promise<{ id: string }>;
+};
+
+export default async function ShelterPage({ params }: PageProps) {
     const supabase = await createClient();
 
-    const{data: shelter, error} = await supabase.from("Profile").select("*").eq("ProfileID", params.id).single();
-    
-    if(error || !shelter) {
-        return(
+    // Resolve route params from the Promise
+    const { id } = await params;
+    const shelterId = id;
+
+    const { data: shelter, error } = await supabase
+        .from("Profile")
+        .select("*")
+        .eq("ProfileID", shelterId)
+        .single();
+
+    if (error || !shelter) {
+        return (
             <div className="text-red-500 text-center text-5xl">
-                Pet not found?
+                Shelter not found?
             </div>
-        )
+        );
     }
 
-
-    async function getCoordinates(address: string): Promise<{lat: number; lng:number} | null> {
+    async function getCoordinates(
+        address: string
+    ): Promise<{ lat: number; lng: number } | null> {
         const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-        const result = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`);
+        const result = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+                address
+            )}&key=${apiKey}`
+        );
 
         if (!result.ok) {
             console.error("Incorrect address for shelter");
@@ -29,36 +47,48 @@ export default async function ShelterPage({params}: {params:{id:string}}) {
         const data = await result.json();
         const numberLocation = data.results?.[0]?.geometry?.location;
 
-        return {lat: numberLocation.lat, lng: numberLocation.lng}
+        return { lat: numberLocation.lat, lng: numberLocation.lng };
     }
 
     const fullAddress = `${shelter.Address}, ${shelter.City}, ${shelter.State}`;
     const coordinates = await getCoordinates(fullAddress);
 
-    return(
+    return (
         <div className="flex flex-col items-center border-collapse justify-center p-6">
             <h1 className="text-4xl font-bold m-6">{shelter.ProfileName}</h1>
+
             {coordinates ? (
                 <MapProviderWrapper>
                     <MapView
-                        markers={[{id: shelter.ProfileID, lat: coordinates.lat, lng: coordinates.lng, label: shelter.ProfileName,},]}
+                        markers={[
+                            {
+                                id: shelter.ProfileID,
+                                lat: coordinates.lat,
+                                lng: coordinates.lng,
+                                label: shelter.ProfileName,
+                            },
+                        ]}
                     />
                 </MapProviderWrapper>
             ) : (
                 <p>Not Available</p>
             )}
-            
-        
+
             <h2 className="text-4xl font-bold m-6">Details</h2>
             <table className="min-w-[400px] w-[600px] border shadow-md">
                 <tbody>
                 <tr>
                     <td className="p-4 font-semibold border w-40">Address</td>
-                    <td className="p-4 border text-center">{shelter.Address}, {shelter.City} {shelter.State}, {shelter.Zip}</td>
+                    <td className="p-4 border text-center">
+                        {shelter.Address}, {shelter.City} {shelter.State},{" "}
+                        {shelter.Zip}
+                    </td>
                 </tr>
                 <tr>
                     <td className="p-4 font-semibold border ">Contact Email</td>
-                    <td className="p-4 border text-center">{shelter.ProfileEmail}</td>
+                    <td className="p-4 border text-center">
+                        {shelter.ProfileEmail}
+                    </td>
                 </tr>
                 <tr>
                     <td className="p-4 font-semibold border ">Contact Phone</td>
@@ -66,10 +96,12 @@ export default async function ShelterPage({params}: {params:{id:string}}) {
                 </tr>
                 <tr>
                     <td className="p-4 font-semibold border">Description</td>
-                    <td className="p-4 border text-center">{shelter.ProfileDescription}</td>
+                    <td className="p-4 border text-center">
+                        {shelter.ProfileDescription}
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
-    )
+    );
 }

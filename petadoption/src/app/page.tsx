@@ -5,7 +5,13 @@ import Link from "next/link";
 import { Database } from "@/types/supabase";
 
 
-const Page = async ({ searchParams }: { searchParams?: Record<string, string> }) => {
+type SearchParams = Record<string, string>;
+
+type PageProps = {
+    searchParams?: Promise<SearchParams>;
+};
+
+const Page = async ({ searchParams }: PageProps) => {
     // Create Supabase client
     const supabase = await createClient();
 

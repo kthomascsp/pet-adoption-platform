@@ -6,12 +6,15 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function ApplyPage({
-                                            params,
-                                        }: {
-    params: { id: string };
-}) {
+type PageProps = {
+    params: Promise<{ id: string }>;
+};
+
+export default async function ApplyPage({ params }: PageProps) {
     const supabase = await createClient();
+
+    const { id } = await params;
+    const petId = id;
 
     // -------------------------------------------------
     // 1. Load the pet (same query you already use)
@@ -19,7 +22,7 @@ export default async function ApplyPage({
     const { data: pet, error } = await supabase
         .from("pet_search_view")
         .select("*")
-        .eq("PetID", params.id)
+        .eq("PetID", petId)
         .single();
 
     if (error || !pet) notFound();
@@ -62,7 +65,7 @@ export default async function ApplyPage({
                         <strong>Shelter:</strong> {shelterName}
                     </p>
                     <Link
-                        href={`/pets/${params.id}`}
+                        href={`/pets/${petId}`}
                         className="inline-block mt-4 text-blue-600 hover:underline"
                     >
                         ← Back to pet profile
@@ -77,7 +80,7 @@ export default async function ApplyPage({
                 </h2>
 
                 {/* The form lives in a separate file so it can be "use client" */}
-                <ApplyForm petId={params.id} />
+                <ApplyForm petId={petId} />
             </section>
         </div>
     );

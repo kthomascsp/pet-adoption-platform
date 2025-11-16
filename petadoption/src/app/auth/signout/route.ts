@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"; // Import Next.js redirect function
 export async function POST() {
     try {
         // Initialize Supabase server client
-        const supabase = createClient();
+        const supabase = await createClient();
 
         // Attempt to sign out the current user
         const { error } = await supabase.auth.signOut();
@@ -19,8 +19,7 @@ export async function POST() {
 
         // Redirect to the homepage regardless of sign-out success
         redirect("/");
-
-    } catch (err: any) {
+    } catch (err: unknown) {
         // Log any unexpected errors
         console.error("Unexpected error during sign out:", err);
 

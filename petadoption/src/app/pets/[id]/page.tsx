@@ -7,14 +7,30 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function PetPage({ params, searchParams }: { params: { id: string }; searchParams: { applied?: string } }) {
+type PageProps = {
+    params: Promise<{ id: string }>;
+    searchParams?: Promise<{ applied?: string }>;
+};
+
+export default async function PetPage({ params, searchParams }: PageProps) { {
     const supabase = await createClient();
+
+    // Resolve route params and search params
+    const { id } = await params;
+    const petId = id;
+
+    const resolvedSearch = (await searchParams) ?? {};
+    const applied = resolvedSearch.applied === "true";
 
     const { data: pet, error } = await supabase
         .from("pet_search_view")
         .select("*")
-        .eq("PetID", params.id)
+        .eq("PetID", petId)
         .single();
+
+    if (error || !pet) {
+        return notFound();
+    }
 
     const imageUrl: string =
         pet !== null
@@ -25,7 +41,7 @@ export default async function PetPage({ params, searchParams }: { params: { id: 
                 : "/dog-generic.png"
             : "/dog-generic.png";
 
-    if (!pet?.ProfileID) {
+    if (!pet.ProfileID) {
         return (
             <div className="text-red-500 text-center text-5xl">
                 Shelter information not available.
@@ -40,11 +56,11 @@ export default async function PetPage({ params, searchParams }: { params: { id: 
         .single();
 
     if (shelterError || !shelter) {
-        return <div className="text-red-500 text-center text-5xl">Shelter not found?</div>;
-    }
-
-    if (error || !pet) {
-        return notFound();
+        return (
+            <div className="text-red-500 text-center text-5xl">
+                Shelter not found?
+            </div>
+        );
     }
 
     function calculateAge(birthdate: string): string {
@@ -60,11 +76,15 @@ export default async function PetPage({ params, searchParams }: { params: { id: 
         return `${age}`;
     }
 
-    async function getCoordinates(address: string): Promise<{ lat: number; lng: number } | null> {
+    async function getCoordinates(
+        address: string
+    ): Promise<{ lat: number; lng: number } | null> {
         const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
         const result = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+                address
+            )}&key=${apiKey}`
         );
 
         if (!result.ok) {
@@ -80,8 +100,6 @@ export default async function PetPage({ params, searchParams }: { params: { id: 
 
     const fullAddress = `${shelter.Address}, ${shelter.City}, ${shelter.State}`;
     const coordinates = await getCoordinates(fullAddress);
-
-    const applied = searchParams.applied === "true";
 
     return (
         <div className="flex flex-col items-center border-collapse justify-center p-6">
@@ -101,6 +119,7 @@ export default async function PetPage({ params, searchParams }: { params: { id: 
                 width={300}
                 height={300}
             />
+
             {coordinates ? (
                 <MapProviderWrapper>
                     <MapView
@@ -135,7 +154,9 @@ export default async function PetPage({ params, searchParams }: { params: { id: 
                 </tr>
                 <tr>
                     <td className="p-4 font-semibold border">Age</td>
-                    <td className="p-4 border text-center">{calculateAge(pet.Birthdate || "Unknown")}</td>
+                    <td className="p-4 border text-center">
+                        {calculateAge(pet.Birthdate || "Unknown")}
+                    </td>
                 </tr>
                 <tr>
                     <td className="p-4 font-semibold border ">Size</td>
@@ -152,7 +173,7 @@ export default async function PetPage({ params, searchParams }: { params: { id: 
 
             <div className="mt-8 text-center">
                 <Link
-                    href={`/pets/${params.id}/apply`}
+                    href={`/pets/${petId}/apply`}
                     className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded"
                 >
                     Apply to Adopt {pet.PetName}
@@ -160,4 +181,5 @@ export default async function PetPage({ params, searchParams }: { params: { id: 
             </div>
         </div>
     );
+}
 }
