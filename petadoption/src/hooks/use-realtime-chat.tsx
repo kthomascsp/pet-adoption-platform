@@ -14,23 +14,32 @@ export interface ChatMessage {
     senderId: string;
     content: string;
     messageDateTime: string;
+    threadKey: string;
 }
 
-export function useRealtimeChat() {
+/**
+ * useRealtimeChat
+ * @param threadKey string that identifies the "room" (for multiple threads)
+ *
+ */
+
+export function useRealtimeChat(threadKey: string) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [userNames, setUserNames] = useState<Record<string, string>>({});
 
-    // Load initial messages and sender names
+    // Load initial messages for THIS thread + sender names
     useEffect(() => {
         const fetchMessages = async () => {
             const { data, error } = await supabase
                 .from('message')
                 .select(`
-                    id: MessageID,
-                    senderId: SenderID,
-                    content: Content,
-                    messageDateTime: MessageDateTime
-                `)
+          id: MessageID,
+          senderId: SenderID,
+          content: Content,
+          messageDateTime: MessageDateTime,
+          threadKey: ThreadKey
+        `)
+                .eq('ThreadKey', threadKey)
                 .order('MessageDateTime', { ascending: true });
 
             if (error) {
@@ -41,9 +50,8 @@ export function useRealtimeChat() {
             setMessages(data || []);
 
             // Extract unique sender IDs
-            const senderIds = [...new Set(data?.map(m => m.senderId))];
+            const senderIds = [...new Set((data ?? []).map(m => m.senderId))];
 
-            // Fetch sender names from Profile table
             if (senderIds.length > 0) {
                 const { data: profiles } = await supabase
                     .from('Profile')
@@ -51,22 +59,27 @@ export function useRealtimeChat() {
                     .in('ProfileID', senderIds);
 
                 const nameMap = Object.fromEntries(
-                    profiles?.map(p => [p.ProfileID, `${p.ProfileName} ${p.LastName}`.trim()]) ?? []
+                    (profiles ?? []).map(p => [p.ProfileID, `${p.ProfileName} ${p.LastName}`.trim()])
                 );
                 setUserNames(nameMap);
             }
         };
 
         fetchMessages();
-    }, []);
+    }, [threadKey]);
 
-    // Subscribe to new messages in real-time
+    // Subscribe to new messages for THIS thread in real-time
     useEffect(() => {
         const channel = supabase
-            .channel('public:message')
+            .channel(`message-room-${threadKey}`)
             .on(
                 'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'message' },
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'message',
+                    filter: `ThreadKey=eq.${threadKey}`,
+                },
                 async (payload) => {
                     const m = payload.new as any;
                     const senderId = m.SenderID;
@@ -85,26 +98,26 @@ export function useRealtimeChat() {
                         }
                     }
 
-                    // Append the new message
                     const newMessage: ChatMessage = {
                         id: m.MessageID,
                         senderId: m.SenderID,
                         content: m.Content,
                         messageDateTime: m.MessageDateTime,
+                        threadKey: m.ThreadKey,
                     };
+
                     setMessages(prev => [...prev, newMessage]);
                 }
             )
             .subscribe();
 
-        // Clean up listener on unmount
         return () => {
             channel.unsubscribe();
         };
-    }, [userNames]);
+    }, [threadKey, userNames]);
 
     /**
-     * Sends a new message to the Supabase database.
+     * Sends a new message to the Supabase database for THIS thread.
      */
     const sendMessage = async (senderId: string, content: string) => {
         await supabase.from('message').insert([
@@ -112,6 +125,7 @@ export function useRealtimeChat() {
                 SenderID: senderId,
                 Content: content,
                 MessageDateTime: new Date().toISOString(),
+                ThreadKey: threadKey, // 👈 tie it to this board
             },
         ]);
     };

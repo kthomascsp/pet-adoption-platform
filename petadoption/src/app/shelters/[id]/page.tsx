@@ -1,7 +1,7 @@
 import MapProviderWrapper from "@/components/MapProviderWrapper";
 import MapView from "@/components/MapView";
-import {createClient} from "@/utils/supabase/server";
-
+import { createClient } from "@/utils/supabase/server";
+import { ShelterChatSection } from "@/components/ShelterChatSection";
 
 type PageProps = {
     params: Promise<{ id: string }>;
@@ -10,7 +10,6 @@ type PageProps = {
 export default async function ShelterPage({ params }: PageProps) {
     const supabase = await createClient();
 
-    // Resolve route params from the Promise
     const { id } = await params;
     const shelterId = id;
 
@@ -45,9 +44,9 @@ export default async function ShelterPage({ params }: PageProps) {
         }
 
         const data = await result.json();
-        const numberLocation = data.results?.[0]?.geometry?.location;
+        const loc = data.results?.[0]?.geometry?.location;
 
-        return { lat: numberLocation.lat, lng: numberLocation.lng };
+        return { lat: loc.lat, lng: loc.lng };
     }
 
     const fullAddress = `${shelter.Address}, ${shelter.City}, ${shelter.State}`;
@@ -75,6 +74,7 @@ export default async function ShelterPage({ params }: PageProps) {
             )}
 
             <h2 className="text-4xl font-bold m-6">Details</h2>
+
             <table className="min-w-[400px] w-[600px] border shadow-md">
                 <tbody>
                 <tr>
@@ -102,6 +102,12 @@ export default async function ShelterPage({ params }: PageProps) {
                 </tr>
                 </tbody>
             </table>
+
+
+            <ShelterChatSection
+                shelterId={shelterId}
+                shelterName={shelter.ProfileName}
+            />
         </div>
     );
 }

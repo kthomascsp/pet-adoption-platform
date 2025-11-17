@@ -15,13 +15,22 @@ export default function Page() {
 
     // Show a loading state until the user is identified
     if (!currentUserId) {
-        return <p className="text-xl">Loading your profile…</p>;
+        return (
+            <main className="flex items-center justify-center min-h-screen p-8 bg-gray-50">
+                <p className="text-xl">Loading your profile…</p>
+            </main>
+        );
     }
 
     return (
         <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-50">
-            {/* Main chat interface */}
-            <RealtimeChat currentUserId={currentUserId} />
+            {/* Main chat interface - global "Open Forum" room */}
+            <RealtimeChat
+                currentUserId={currentUserId}
+                threadKey="open-forum"
+                title="Open Forum Test"
+            />
         </main>
     );
 }
+

@@ -1,29 +1,40 @@
 /**
  * Renders the real-time chat interface.
- * - Displays a scrollable list of messages.
+ * - Displays a scrollable list of messages for a specific "thread"/room.
  * - Submits new messages to the database.
  * - Uses the `useRealtimeChat` hook to listen for updates.
  */
 
 'use client';
 
-import React, { FormEvent } from 'react';
+import React, { FormEvent, useEffect, useRef } from 'react';
 import { useRealtimeChat } from '@/hooks/use-realtime-chat';
 import { ChatMessageItem } from '@/components/chat-message';
 
 interface RealtimeChatProps {
     currentUserId: string;
+    threadKey: string;
+    title?: string;
 }
 
-export const RealtimeChat: React.FC<RealtimeChatProps> = ({ currentUserId }) => {
-    const { messages, sendMessage, userNames } = useRealtimeChat();
+export const RealtimeChat: React.FC<RealtimeChatProps> = ({
+                                                              currentUserId,
+                                                              threadKey,
+                                                              title = 'Open Forum Test',
+                                                          }) => {
 
-    /**
-     * Handles form submission:
-     * - Prevents default reload
-     * - Sends a new message via Supabase
-     * - Clears the input field
-     */
+    const { messages, sendMessage, userNames } = useRealtimeChat(threadKey);
+
+    const listRef = useRef<HTMLDivElement | null>(null);
+
+
+    useEffect(() => {
+        const el = listRef.current;
+        if (el) {
+            el.scrollTop = el.scrollHeight;
+        }
+    }, [messages.length]);
+
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const form = e.target as HTMLFormElement;
@@ -36,13 +47,16 @@ export const RealtimeChat: React.FC<RealtimeChatProps> = ({ currentUserId }) => 
     };
 
     return (
-        <div className="flex flex-col h-[80vh] w-full max-w-3xl bg-white rounded-lg shadow p-6">
+        <div className="flex flex-col w-full max-w-3xl bg-white rounded-lg shadow p-6 mt-8">
             <h2 className="text-2xl font-semibold mb-4 border-b pb-2 text-center">
-                Open Forum Test
+                {title}
             </h2>
 
             {/* Message feed */}
-            <div className="flex-1 overflow-y-auto space-y-4">
+            <div
+                ref={listRef}
+                className="flex-1 max-h-96 overflow-y-auto space-y-4"
+            >
                 {messages.length === 0 ? (
                     <p className="text-gray-500 text-center italic mt-4">
                         No posts yet. Be the first to start the discussion!
@@ -59,7 +73,10 @@ export const RealtimeChat: React.FC<RealtimeChatProps> = ({ currentUserId }) => 
             </div>
 
             {/* New message input */}
-            <form onSubmit={handleSubmit} className="mt-4 flex items-center border-t pt-4 gap-2">
+            <form
+                onSubmit={handleSubmit}
+                className="mt-4 flex items-center border-t pt-4 gap-2"
+            >
                 <input
                     name="message"
                     type="text"

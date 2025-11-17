@@ -15,7 +15,7 @@ interface ChatMessageItemProps {
 }
 
 export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message, userName }) => {
-    // Format timestamp for readability
+    // Format timestamp
     const formattedTime = message.messageDateTime
         ? new Date(message.messageDateTime).toLocaleString([], {
             hour: '2-digit',
@@ -28,7 +28,6 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message, userN
     return (
         <div className="p-4 border rounded-lg bg-white shadow-sm hover:shadow transition">
             <div className="flex justify-between items-center mb-1 text-sm text-gray-500">
-                {/* Display sender name if available, otherwise partial UUID */}
                 <span className="font-semibold text-indigo-600">
                     {userName || (message.senderId ? message.senderId.slice(0, 8) : 'Unknown')}
                 </span>
@@ -36,8 +35,10 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message, userN
                 <span className="text-gray-400">{formattedTime}</span>
             </div>
 
-            <p className="text-gray-800 leading-relaxed">
-                {message.content || <span className="italic text-gray-400">No content</span>}
+            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
+                {message.content || (
+                    <span className="italic text-gray-400">No content</span>
+                )}
             </p>
         </div>
     );
