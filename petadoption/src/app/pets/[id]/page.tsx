@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PetChatSection } from "@/components/PetChatSection";
+import ScrollToTopOnApplied from "@/components/ScrollToTopOnApplied";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +106,7 @@ export default async function PetPage({ params, searchParams }: PageProps) {
         return (
             <div className="flex flex-col items-center border-collapse justify-center p-6">
                 {/* SUCCESS TOAST */}
+                <ScrollToTopOnApplied />
                 {applied && (
                     <div className="mb-6 w-full max-w-2xl bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-r shadow-md">
                         <p className="font-semibold">Application submitted successfully!</p>

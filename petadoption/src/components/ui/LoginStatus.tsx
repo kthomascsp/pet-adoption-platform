@@ -34,7 +34,7 @@ export default function LoginStatus() {
           {profile?.ProfileName || user.email}
         </span>
             </Link>
-            <button onClick={logout} className="text-sm underline hover:text-red-500">
+            <button onClick={logout} className="text-sm underline cursor-pointer">
                 Logout
             </button>
         </div>
