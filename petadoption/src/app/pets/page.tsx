@@ -171,7 +171,7 @@ export default async function PetsPage({ searchParams }: PageProps) {
                     <p className="text-center font-medium mt-6">
                         Found {pets.length} {pets.length === 1 ? "pet" : "pets"}
                     </p>
-                    <div className="flex flex-wrap justify-center gap-8 p-6">
+                    <div className="flex flex-wrap justify-center gap-8 p-6 w-[80%] mx-auto">
                         {pets.map((p: any) => (
                             <Link
                                 key={p.PetID}
@@ -179,7 +179,7 @@ export default async function PetsPage({ searchParams }: PageProps) {
                                 className="w-80 border rounded-lg p-4 hover:shadow-lg transition text-center flex flex-col items-center"
                             >
                                 {p.ImageURL ? (
-                                    <div className="relative w-full h-48 mb-3">
+                                    <div className="relative w-full h-64 mb-3">
                                         <Image
                                             src={p.ImageURL}
                                             alt={p.PetName}
