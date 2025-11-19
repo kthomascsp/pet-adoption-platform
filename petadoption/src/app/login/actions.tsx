@@ -13,7 +13,7 @@ import { createClient } from "@/utils/supabase/server";
 /**
  * Logs a user in using Supabase email/password authentication.
  */
-export async function login(formData: FormData) {
+/*export async function login(formData: FormData) {
     const supabase = await createClient();
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -29,12 +29,12 @@ export async function login(formData: FormData) {
     revalidatePath("/", "layout");
     //redirect("/profile");
     return { success: true };
-}
+}*/
 
 /**
  * Registers a new user in Supabase Auth and creates their profile record.
  */
-export async function signup(formData: FormData) {
+/*export async function signup(formData: FormData) {
     const supabase = await createClient();
 
     // Extract user data from form fields
@@ -94,14 +94,14 @@ export async function signup(formData: FormData) {
     revalidatePath("/", "layout");
     //redirect("/profile");
     return { success: true };
-}
+}*/
 
 /**
  * Logs out the current user and redirects to the login page.
  */
-export async function logout() {
+/*export async function logout() {
     const supabase = await createClient();
     await supabase.auth.signOut(); // Ensures session cookie is cleared
     revalidatePath("/", "layout");
     redirect("/login");
-}
+}*/

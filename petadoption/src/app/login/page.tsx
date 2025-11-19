@@ -9,26 +9,26 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, signup } from "./actions";
+//import { login, signup } from "./actions";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, login, signup } = useAuth();
 
     const [error, setError] = useState<string | null>(null);
 
     // If already logged in → redirect immediately
-    useEffect(() => {
+    /*useEffect(() => {
         if (user) {
             router.replace("/profile");
         }
-    }, [user, router]);
+    }, [user, router]);*/
 
     // If user already logged in, prevent flicker
-    if (user) {
+    /*if (user) {
         return <p className="text-center mt-10">Redirecting...</p>;
-    }
+    }*/
 
     return (
         <div className="flex items-start justify-evenly p-8 flex-wrap">
@@ -41,13 +41,16 @@ export default function LoginPage() {
                         setError(null);
 
                         const formData = new FormData(e.currentTarget);
-                        const result = await login(formData);
+                        const result = await login(
+                            formData.get("email") as string,
+                            formData.get("password") as string
+                        );
 
-                        if (result?.error) {
+                        if (result.error) {
                             setError(result.error);
+                        } else {
+                            router.replace("/profile");
                         }
-                        // Force client-side navigation to trigger AuthContext update
-                        router.push("/profile");
                     }}
                     className="flex flex-col gap-2 border p-5 rounded shadow w-[300px]"
                 >
@@ -75,13 +78,25 @@ export default function LoginPage() {
                         setError(null);
 
                         const formData = new FormData(e.currentTarget);
-                        const result = await signup(formData);
+                        const result = await signup({
+                            accountType: formData.get("accountType") as string,
+                            firstname: formData.get("firstname") as string,
+                            lastname: formData.get("lastname") as string,
+                            address: formData.get("address") as string,
+                            city: formData.get("city") as string,
+                            state: formData.get("state") as string,
+                            zip: formData.get("zip") as string,
+                            phone: formData.get("phone") as string,
+                            email: formData.get("email") as string,
+                            password: formData.get("password") as string,
+                        });
 
-                        if (result?.error) {
+                        if (result.error) {
                             setError(result.error);
+                        } else {
+                            router.replace("/profile");
                         }
-                        // Force client-side navigation to trigger AuthContext update
-                        router.push("/profile");
+
                     }}
                     className="flex flex-col gap-2 border p-5 rounded shadow w-[300px]"
                 >
