@@ -11,21 +11,21 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { createClient } from "@/utils/supabase/client";
 import ProfileAvatar from "@/components/ProfileAvatar";
 
 export default function ProfilePage() {
-    const { user, profile, loading, setProfile } = useAuth();
+    const { user, profile, loading, setProfile, updateProfile, uploadProfileImage } = useAuth();
     const router = useRouter();
     const [saving, setSaving] = useState(false);
 
     // Redirect if not logged in
-    /*useEffect(() => {
+    useEffect(() => {
         if (!loading && !user) {
             router.replace("/login");
         }
-    }, [loading, user, router]);*/
+    }, [loading, user, router]);
 
+    // Show a loading message until profile finishes loading
     if (loading || !profile) {
         return <p className="text-center mt-10 text-lg">Loading...</p>;
     }
@@ -42,85 +42,25 @@ export default function ProfilePage() {
 
     // Save updated profile
     const handleSave = async () => {
-        if (!profile || !user) return;
+        if (!profile) return;
 
         setSaving(true);
-        const supabase = createClient();
-
-        const { data, error, status } = await supabase
-            .from("Profile")
-            .update({
-                ProfileName: profile.ProfileName,
-                LastName: profile.LastName,
-                ProfileEmail: profile.ProfileEmail,
-                Phone: profile.Phone,
-                Address: profile.Address,
-                City: profile.City,
-                State: profile.State,
-                Zip: profile.Zip,
-                ProfileType: profile.ProfileType,
-                ProfileDescription: profile?.ProfileDescription || "",
-            })
-            .eq("ProfileID", user.id)
-            .select();
-
+        const { error } = await updateProfile(profile);
         setSaving(false);
 
-        if (error) {
-            alert("Error saving profile: " + error.message);
-        } else {
-            alert("Profile updated successfully!");
-        }
+        if (error) alert("Error saving profile: " + error);
+        else alert("Profile updated successfully!");
     };
 
     // Upload profile picture
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const supabase = createClient();
         const file = event.target.files?.[0];
-        if (!file || !user) return;
+        if (!file) return;
 
-        const filePath = `profiles/${user.id}/profile-picture.${file.name.split(".").pop()}`;
+        const { error } = await uploadProfileImage(file);
 
-        // Upload to storage
-        const { error: uploadError } = await supabase.storage
-            .from("ProfileImagesBucket")
-            .upload(filePath, file, { upsert: true });
-
-        if (uploadError) {
-            alert("Error uploading image: " + uploadError.message);
-            return;
-        }
-
-        // Get URL
-        const { data: urlData } = supabase.storage
-            .from("ProfileImagesBucket")
-            .getPublicUrl(filePath);
-
-        const imageUrl = urlData.publicUrl;
-
-        // Replace old image record
-        await supabase
-            .from("Image")
-            .delete()
-            .eq("OwnerID", user.id)
-            .eq("ImageType", "profile");
-
-        const { error: insertError } = await supabase
-            .from("Image")
-            .insert([
-                {
-                    OwnerID: user.id,
-                    ImageType: "profile",
-                    URL: imageUrl,
-                },
-            ]);
-
-        if (insertError) {
-            alert("Error saving image record: " + insertError.message);
-        } else {
-            alert("Profile picture updated!");
-            setProfile((prev: any) => ({ ...prev, ImageURL: imageUrl }));
-        }
+        if (error) alert("Error uploading image: " + error);
+        else alert("Profile picture updated!");
     };
 
     return (

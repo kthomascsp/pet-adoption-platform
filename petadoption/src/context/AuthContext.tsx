@@ -40,6 +40,8 @@ interface AuthContextType {
     signup: (form: {email: string, password: string, accountType: string, firstname: string, lastname: string, address: string, city: string,
                  state: string, zip: string, phone: string}) => Promise<AuthResult>;
     logout: () => Promise<void>;
+    updateProfile: (updates: Partial<NonNullableProfile>) => Promise<AuthResult>;
+    uploadProfileImage: (file: File) => Promise<AuthResult>;
 }
 
 type AuthResult = {
@@ -47,12 +49,15 @@ type AuthResult = {
     success: boolean;
 };
 
+type NonNullableProfile = Exclude<ProfileType, null>;
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<UserType>(null);
-    const [profile, _setProfile] = useState<ProfileType>(null);
+    //const [profile, _setProfile] = useState<ProfileType>(null);
+    const [profile, _setProfile] = useState<NonNullableProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
     const router = useRouter();
@@ -64,14 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq("ProfileID", userId)
             .single();
         //console.log("profileData: ", profileData);
-
-        /*const { data: imageData } = await supabase
-            .from("Image")
-            .select("URL")
-            .eq("OwnerID", userId)
-            .eq("ImageType", "profile")
-            .single();*/
-        //console.log("imageData: ", imageData);
 
         const updatedProfile = {
             ProfileName: profileData?.ProfileName || null,
@@ -132,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Show a message in the console whenever the profile changes
     useEffect(() => {
-        console.log("Profile updated:", profile);
+        //console.log("Profile updated:", profile);
     }, [profile]);
 
     const setProfile = (
@@ -218,6 +215,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.replace("/login");
     };
 
+    // Update profile fields
+    const updateProfile = async (updates: Partial<NonNullableProfile>): Promise<AuthResult> => {
+        if (!user) return { error: "No user", success: false };
+
+        const { error } = await supabase
+            .from("Profile")
+            .update({
+                ProfileName: updates.ProfileName,
+                LastName: updates.LastName,
+                ProfileEmail: updates.ProfileEmail,
+                Phone: updates.Phone,
+                Address: updates.Address,
+                City: updates.City,
+                State: updates.State,
+                Zip: updates.Zip,
+                ProfileType: updates.ProfileType,
+                ProfileDescription: updates.ProfileDescription,
+            })
+            .eq("ProfileID", user.id);
+
+        if (error) return { error: error.message, success: false };
+
+        // Update local profile state
+        //setProfile(prev => ({ ...prev, ...updates }));
+        setProfile(prev => {
+            if (!prev) return prev;
+            return { ...prev, ...updates };
+        });
+
+        return { error: null, success: true };
+    };
+
+    // Upload profile image
+    const uploadProfileImage = async (file: File): Promise<AuthResult> => {
+        if (!user) return { error: "No user", success: false };
+
+        const filePath = `profiles/${user.id}/profile-picture.${file.name.split(".").pop()}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from("ProfileImagesBucket")
+            .upload(filePath, file, { upsert: true });
+
+        if (uploadError) {
+            return { error: uploadError.message, success: false };
+        }
+
+        // Get URL
+        const { data: urlData } = supabase.storage
+            .from("ProfileImagesBucket")
+            .getPublicUrl(filePath);
+
+        const imageUrl = urlData.publicUrl;
+
+        // Delete old record
+        await supabase
+            .from("Image")
+            .delete()
+            .eq("OwnerID", user.id)
+            .eq("ImageType", "profile");
+
+        const { error: insertError } = await supabase.from("Image").insert([
+            { OwnerID: user.id, ImageType: "profile", URL: imageUrl }
+        ]);
+
+        if (insertError) {
+            return { error: insertError.message, success: false };
+        }
+
+        // Update profile state in context
+        //setProfile(prev => ({ ...prev, ImageURL: imageUrl }));
+        setProfile(prev => {
+            if (!prev) return prev;
+            return { ...prev, ImageURL: imageUrl };
+        });
+
+        return { error: null, success: true };
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -228,7 +303,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setProfile,
                 login,
                 signup,
-                logout
+                logout,
+                updateProfile,
+                uploadProfileImage
             }}
         >
 
