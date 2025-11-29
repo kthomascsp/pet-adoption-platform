@@ -131,17 +131,29 @@ export default function ProfileAvatar({
         >
             {/* Avatar Image or loading placeholder */}
             {!profile?.ImageURL ? (
-                <div
+                /*<div
                     className="bg-gray-200 rounded-full animate-pulse"
                     style={{ width: size, height: size }}
-                />
+                />*/
+                <div
+                    className="rounded-full overflow-hidden border-2 border-gray-300"
+                    style={{ width: size, height: size }}
+                >
+                    <Image
+                        src={"/profile-generic.jpg"}
+                        alt="Profile pic"
+                        width={size}
+                        height={size}
+                        className="w-full h-full object-cover"
+                    />
+                </div>
             ) : (
                 <div
                     className="rounded-full overflow-hidden border-2 border-gray-300"
                     style={{ width: size, height: size }}
                 >
                     <Image
-                        src={profile?.ImageURL || "/shelter-generic.png"}
+                        src={profile?.ImageURL || "/profile-generic.jpg"}
                         alt="Profile pic"
                         width={size}
                         height={size}
