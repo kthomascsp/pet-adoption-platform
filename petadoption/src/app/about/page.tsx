@@ -12,7 +12,7 @@ const About = () => {
             
             <div className="text-center font-bold">
                 <h2 className="text-3xl p-6 pt-14">Created By:</h2>
-                <p className="text-2xl p-4 mx-auto w-[40%]">Elisha Bjerkeset<br />Carl Frederickson<br />Kirsten Thomas</p>
+                <p className="text-2xl p-4 mx-auto w-[40%]">Elisha Bjerkeset<br />Carl Fredrickson<br />Kristen Thomas</p>
             </div>
         </div>
      );

@@ -1,7 +1,8 @@
 'use client';
 
 import { RealtimeChat } from '@/components/realtime-chat';
-import { useSupabaseUser } from '@/hooks/use-supabase-user';
+//import { useSupabaseUser } from '@/hooks/use-supabase-user';
+import { useAuth } from "@/context/AuthContext";
 
 type PetChatSectionProps = {
     petId: string;
@@ -9,10 +10,11 @@ type PetChatSectionProps = {
 };
 
 export function PetChatSection({ petId, petName }: PetChatSectionProps) {
-    const currentUserId = useSupabaseUser();
+    //const currentUserId = useSupabaseUser();
+    const { user } = useAuth();
     const displayName = petName || 'this pet';
 
-    if (!currentUserId) {
+    if (!user) {
         return (
             <div className="mt-8 w-full max-w-3xl text-center text-gray-600">
                 <p className="italic">
@@ -24,7 +26,7 @@ export function PetChatSection({ petId, petName }: PetChatSectionProps) {
 
     return (
         <RealtimeChat
-            currentUserId={currentUserId}
+            currentUserId={user.id}
             threadKey={`pet-${petId}`}
             title={`Open questions about ${displayName}`}
         />

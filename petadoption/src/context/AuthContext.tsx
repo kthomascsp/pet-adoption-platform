@@ -41,7 +41,7 @@ interface AuthContextType {
                  state: string, zip: string, phone: string}) => Promise<AuthResult>;
     logout: () => Promise<void>;
     updateProfile: (updates: Partial<NonNullableProfile>) => Promise<AuthResult>;
-    uploadProfileImage: (file: File) => Promise<AuthResult>;
+    //uploadProfileImage: (file: File) => Promise<AuthResult>;
 }
 
 type AuthResult = {
@@ -248,7 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Upload profile image
-    const uploadProfileImage = async (file: File): Promise<AuthResult> => {
+    /*const uploadProfileImage = async (file: File): Promise<AuthResult> => {
         if (!user) return { error: "No user", success: false };
 
         const filePath = `profiles/${user.id}/profile-picture.${file.name.split(".").pop()}`;
@@ -291,7 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         return { error: null, success: true };
-    };
+    };*/
 
     return (
         <AuthContext.Provider
@@ -304,8 +304,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 login,
                 signup,
                 logout,
-                updateProfile,
-                uploadProfileImage
+                updateProfile
+                //,uploadProfileImage
             }}
         >
 

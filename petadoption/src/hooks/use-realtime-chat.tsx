@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/client';
+import { createClient } from '@/utils/supabase/client';
 
 // Message structure from the database
 export interface ChatMessage {
@@ -24,6 +24,7 @@ export interface ChatMessage {
  */
 
 export function useRealtimeChat(threadKey: string) {
+    const supabase = createClient();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [userNames, setUserNames] = useState<Record<string, string>>({});
 

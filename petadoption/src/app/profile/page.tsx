@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import ProfileAvatar from "@/components/ProfileAvatar";
 
 export default function ProfilePage() {
-    const { user, profile, loading, setProfile, updateProfile, uploadProfileImage } = useAuth();
+    const { user, profile, loading, setProfile, updateProfile } = useAuth();
     const router = useRouter();
     const [saving, setSaving] = useState(false);
 
@@ -52,34 +52,18 @@ export default function ProfilePage() {
         else alert("Profile updated successfully!");
     };
 
-    // Upload profile picture
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        const { error } = await uploadProfileImage(file);
-
-        if (error) alert("Error uploading image: " + error);
-        else alert("Profile picture updated!");
-    };
-
     return (
         <div className="flex flex-col items-center justify-center p-8 space-y-6 mt-8">
             <h1 className="text-2xl font-semibold mb-4">
                 Welcome, {profile?.ProfileName || user?.email}!
             </h1>
-
             <ProfileAvatar
-                profile={profile}
                 editable
                 size={128}
                 onImageUpdated={(newUrl) =>
                     setProfile((prev: any) => ({ ...prev, ImageURL: newUrl }))
                 }
             />
-
-            {/* Upload photo input */}
-            <input type="file" className="mt-3" onChange={handleFileChange} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl border rounded p-6 shadow bg-white text-black">
                 <div>

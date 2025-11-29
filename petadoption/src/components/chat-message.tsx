@@ -6,8 +6,12 @@
 
 'use client';
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { ChatMessage } from '@/hooks/use-realtime-chat';
+import { useAuth } from "@/context/AuthContext";
+//import ProfileAvatar from "@/components/ProfileAvatar";
+import UserAvatar from "@/components/UserAvatar";
+import {createClient} from "@/utils/supabase/client";
 
 interface ChatMessageItemProps {
     message: ChatMessage;
@@ -15,6 +19,27 @@ interface ChatMessageItemProps {
 }
 
 export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message, userName }) => {
+    const { profile } = useAuth();
+    const supabase = createClient();
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!message.senderId) return;
+
+        const loadAvatar = async () => {
+            const { data } = await supabase
+                .from("profile_search_view")
+                .select("ImageURL")
+                .eq("ProfileID", message.senderId)
+                .single();
+
+            setAvatarUrl(data?.ImageURL || null);
+            console.log("message.senderId: ", message.senderId, " | avatarUrl: ", avatarUrl);
+        };
+
+        loadAvatar();
+    }, [message.senderId, supabase]);
+
     // Format timestamp
     const formattedTime = message.messageDateTime
         ? new Date(message.messageDateTime).toLocaleString([], {
@@ -28,10 +53,13 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message, userN
     return (
         <div className="p-4 border rounded-lg bg-white shadow-sm hover:shadow transition">
             <div className="flex justify-between items-center mb-1 text-sm text-gray-500">
-                <span className="font-semibold text-indigo-600">
-                    {userName || (message.senderId ? message.senderId.slice(0, 8) : 'Unknown')}
-                </span>
-
+                <div className="flex justify-start items-center gap-2">
+                    {/*<ProfileAvatar profile={profile || {}} size={36} />*/}
+                    <UserAvatar imageUrl={avatarUrl} size={36} />
+                    <span className="font-semibold text-indigo-600">
+                        {userName || (message.senderId ? message.senderId.slice(0, 8) : 'Unknown')}
+                    </span>
+                </div>
                 <span className="text-gray-400">{formattedTime}</span>
             </div>
 

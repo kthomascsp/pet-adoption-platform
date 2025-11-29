@@ -17,8 +17,10 @@ export default function Header() {
     return (
         <header className="sticky top-0 z-50 bg-blue-400 text-white font-semibold shadow-md">
             {/* Top bar with login/logout and temporary chat link */}
-            <div className="flex justify-between items-center p-2 text-sm pr-6 bg-blue-500/90 backdrop-blur-sm">
-                <Link href="/chat">Chat Test Page</Link> {/* Temporary test link */}
+            <div className="flex justify-end items-center p-2 text-sm pr-6 bg-blue-500/90 backdrop-blur-sm">
+                {/*<Link href="/chat">Chat Test Page</Link>*/}
+                {/*<Link href="/test-storage">Storage Test Page</Link>*/}
+
                 <LoginStatus /> {/* Shows user login or logout status */}
             </div>
 

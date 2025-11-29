@@ -29,7 +29,8 @@ export default function LoginStatus() {
     return (
         <div className="flex items-center gap-4">
             <Link href="/profile" className="flex items-center gap-2">
-                <ProfileAvatar profile={profile || {}} size={36} />
+                {/*<ProfileAvatar profile={profile || {}} size={36} />*/}
+                <ProfileAvatar size={36} />
                 <span className="text-sm">
           {profile?.ProfileName || user.email}
         </span>
