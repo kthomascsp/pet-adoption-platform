@@ -12,17 +12,44 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import ProfileAvatar from "@/components/ProfileAvatar";
+import { createClient } from "@/utils/supabase/client";
+import ApplicationItem from "@/components/ApplicationItem"
 
 export default function ProfilePage() {
     const { user, profile, loading, setProfile, updateProfile } = useAuth();
     const router = useRouter();
     const [saving, setSaving] = useState(false);
+    const supabase = createClient();
+    const [applications, setApplications] = useState<any[]>([]);
+    const [loadingApps, setLoadingApps] = useState(true);
 
-    // Redirect if not logged in
+
     useEffect(() => {
+        // Redirect if not logged in
         if (!loading && !user) {
             router.replace("/login");
         }
+
+        // Get adoption applications
+        const loadApplications = async () => {
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from("application_search_view")
+                .select("*")
+                .eq("ApplicantProfileID", user.id)
+                .order("ApplicationDateTime", { ascending: false });
+
+            if (error) {
+                console.log("Error getting application info: ", error);
+            } else {
+                console.log("Successfully retrieved application info. data: ", data);
+                setApplications(data || []);
+            }
+            setLoadingApps(false);
+        };
+
+        loadApplications();
     }, [loading, user, router]);
 
     // Show a loading message until profile finishes loading
@@ -52,8 +79,10 @@ export default function ProfilePage() {
         else alert("Profile updated successfully!");
     };
 
+
     return (
         <div className="flex flex-col items-center justify-center p-8 space-y-6 mt-8">
+            {/* Greeting and profile pic section */}
             <h1 className="text-2xl font-semibold mb-4">
                 Welcome, {profile?.ProfileName || user?.email}!
             </h1>
@@ -65,118 +94,143 @@ export default function ProfilePage() {
                 }
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl border rounded p-6 shadow bg-white text-black">
-                <div>
-                    <strong>First Name:</strong>{" "}
-                    <input
-                        type="text"
-                        name="ProfileName"
-                        value={profile?.ProfileName || ""}
-                        onChange={handleChange}
-                    />
+            {/* Profile details section */}
+            <div className="flex flex-col items-center justify-center p-6 w-full border rounded shadow bg-white text-black">
+                <div className="text-xl font-semibold mb-4">
+                    Profile Details
                 </div>
 
-                <div>
-                    <strong>Last Name:</strong>{" "}
-                    <input
-                        type="text"
-                        name="LastName"
-                        value={profile?.LastName || ""}
-                        onChange={handleChange}
-                    />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
+                    <div>
+                        <strong>First Name:</strong>{" "}
+                        <input
+                            type="text"
+                            name="ProfileName"
+                            value={profile?.ProfileName || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <strong>Email:</strong>{" "}
-                    <input
-                        type="text"
-                        name="ProfileEmail"
-                        value={profile?.ProfileEmail || ""}
-                        onChange={handleChange}
-                    />
-                </div>
+                    <div>
+                        <strong>Last Name:</strong>{" "}
+                        <input
+                            type="text"
+                            name="LastName"
+                            value={profile?.LastName || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <strong>Phone:</strong>{" "}
-                    <input
-                        type="text"
-                        name="Phone"
-                        value={profile?.Phone || ""}
-                        onChange={handleChange}
-                    />
-                </div>
+                    <div>
+                        <strong>Email:</strong>{" "}
+                        <input
+                            type="text"
+                            name="ProfileEmail"
+                            value={profile?.ProfileEmail || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <strong>Address:</strong>{" "}
-                    <input
-                        type="text"
-                        name="Address"
-                        value={profile?.Address || ""}
-                        onChange={handleChange}
-                    />
-                </div>
+                    <div>
+                        <strong>Phone:</strong>{" "}
+                        <input
+                            type="text"
+                            name="Phone"
+                            value={profile?.Phone || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <strong>City:</strong>{" "}
-                    <input
-                        type="text"
-                        name="City"
-                        value={profile?.City || ""}
-                        onChange={handleChange}
-                    />
-                </div>
+                    <div>
+                        <strong>Address:</strong>{" "}
+                        <input
+                            type="text"
+                            name="Address"
+                            value={profile?.Address || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <strong>State:</strong>{" "}
-                    <input
-                        type="text"
-                        name="State"
-                        value={profile?.State || ""}
-                        onChange={handleChange}
-                    />
-                </div>
+                    <div>
+                        <strong>City:</strong>{" "}
+                        <input
+                            type="text"
+                            name="City"
+                            value={profile?.City || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <strong>Zip:</strong>{" "}
-                    <input
-                        type="text"
-                        name="Zip"
-                        value={profile?.Zip || ""}
-                        onChange={handleChange}
-                    />
-                </div>
+                    <div>
+                        <strong>State:</strong>{" "}
+                        <input
+                            type="text"
+                            name="State"
+                            value={profile?.State || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <strong>Account Type:</strong>{" "}
-                    <select
-                        name="ProfileType"
-                        value={profile?.ProfileType || ""}
-                        onChange={handleChange}
+                    <div>
+                        <strong>Zip:</strong>{" "}
+                        <input
+                            type="text"
+                            name="Zip"
+                            value={profile?.Zip || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <div>
+                        <strong>Account Type:</strong>{" "}
+                        <select
+                            name="ProfileType"
+                            value={profile?.ProfileType || ""}
+                            onChange={handleChange}
+                        >
+                            <option value="">-- Select --</option>
+                            <option value="adopter">Adopter</option>
+                            <option value="shelter">Shelter</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <strong>Description:</strong>{" "}
+                        <input
+                            type="text"
+                            name="ProfileDescription"
+                            value={profile?.ProfileDescription || ""}
+                            onChange={handleChange}
+                        />
+                    </div>
+                </div>
+                <div className="mt-4">
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="btn-primary"
                     >
-                        <option value="">-- Select --</option>
-                        <option value="adopter">Adopter</option>
-                        <option value="shelter">Shelter</option>
-                    </select>
-                </div>
-
-                <div>
-                    <strong>Description:</strong>{" "}
-                    <input
-                        type="text"
-                        name="ProfileDescription"
-                        value={profile?.ProfileDescription || ""}
-                        onChange={handleChange}
-                    />
+                        {saving ? "Saving..." : "Save Changes"}
+                    </button>
                 </div>
             </div>
 
-            <button
-                onClick={handleSave}
-                disabled={saving}
-                className="m-6 py-6 px-20 bg-green-400 hover:bg-green-600 border rounded cursor-pointer"
-            >
-                {saving ? "Saving..." : "Save"}
-            </button>
+            {/* Adoption applications section */}
+            <div className="flex flex-col items-center justify-center p-6 mt-10 w-full border rounded shadow bg-white text-black">
+                <h2 className="text-xl font-semibold mb-4">Your Adoption Applications</h2>
+
+                {loadingApps && <p>Loading applications...</p>}
+
+                {!loadingApps && applications.length === 0 && (
+                    <p>You have not submitted any applications yet.</p>
+                )}
+
+                <div className="space-y-4">
+                    {applications.map((app) => (
+                        <ApplicationItem key={app.ApplicationID} app={app} />
+                    ))}
+                </div>
+            </div>
         </div>
     );
 }
