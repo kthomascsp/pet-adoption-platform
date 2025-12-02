@@ -22,6 +22,8 @@ export default function ProfilePage() {
     const supabase = createClient();
     const [applications, setApplications] = useState<any[]>([]);
     const [loadingApps, setLoadingApps] = useState(true);
+    const [statusFilter, setStatusFilter] = useState("all");
+    const isShelter = profile?.ProfileType === "shelter" || false;
 
 
     useEffect(() => {
@@ -34,23 +36,36 @@ export default function ProfilePage() {
         const loadApplications = async () => {
             if (!user) return;
 
-            const { data, error } = await supabase
-                .from("application_search_view")
-                .select("*")
-                .eq("ApplicantProfileID", user.id)
-                .order("ApplicationDateTime", { ascending: false });
+            if (isShelter) {
+                // SHELTER VIEW: applications for pets owned by shelter
+                const { data, error } = await supabase
+                    .from("application_search_view")
+                    .select("*")
+                    .eq("ShelterProfileID", user.id)     // <-- KEY CHANGE
+                    .order("ApplicationDateTime", { ascending: false });
 
-            if (error) {
-                console.log("Error getting application info: ", error);
+                if (error) console.log("Error getting shelter application info:", error);
+                else setApplications(data || []);
+
             } else {
-                console.log("Successfully retrieved application info. data: ", data);
-                setApplications(data || []);
+                // ADOPTER VIEW: applications submitted by this user
+                const { data, error } = await supabase
+                    .from("application_search_view")
+                    .select("*")
+                    .eq("ApplicantProfileID", user.id)
+                    .order("ApplicationDateTime", { ascending: false });
+
+                if (error) console.log("Error getting user application info:", error);
+                else setApplications(data || []);
             }
+
+            console.log("Retrieved applications | isShelter: ", isShelter);
+
             setLoadingApps(false);
         };
 
         loadApplications();
-    }, [loading, user, router]);
+    }, [loading, user, profile]);
 
     // Show a loading message until profile finishes loading
     if (loading || !profile) {
@@ -79,6 +94,56 @@ export default function ProfilePage() {
         else alert("Profile updated successfully!");
     };
 
+    // Update application status
+    const handleUpdateStatus = async (appId: number, newStatus: string) => {
+        /*console.log("Updating status on table: Application", {
+            appId,
+            newStatus,
+            user
+        });*/
+
+        const { data, error } = await supabase
+            .from("Application")
+            .update({ Status: newStatus })
+            .eq("ApplicationID", appId)
+            .select();
+
+        console.log("Update result:", data, error);
+        if (error) alert("Error updating status: " + error.message);
+
+        // Refresh UI
+        setApplications(prev =>
+            prev.map(a =>
+                a.ApplicationID === appId ? { ...a, Status: newStatus } : a
+            )
+        );
+    };
+
+    // Update shelter notes
+    const handleUpdateNotes = async (appId: number, notes: string) => {
+        /*console.log("Updating notes on table: Application", {
+            appId,
+            notes,
+            user
+        });*/
+
+        const { data, error } = await supabase
+            .from("Application")
+            .update({ ShelterNotes: notes })
+            .eq("ApplicationID", appId)
+            .select();
+
+        console.log("Update result:", data, error);
+        if (error) alert("Error updating notes: " + error.message);
+
+        // Refresh UI
+        setApplications(prev =>
+            prev.map(a =>
+                a.ApplicationID === appId ? { ...a, ShelterNotes: notes } : a
+            )
+        );
+    };
+
 
     return (
         <div className="flex flex-col items-center justify-center p-8 space-y-6 mt-8">
@@ -93,6 +158,53 @@ export default function ProfilePage() {
                     setProfile((prev: any) => ({ ...prev, ImageURL: newUrl }))
                 }
             />
+
+            {/* Adoption applications section */}
+            <div className="flex flex-col items-center justify-center p-6 mt-10 w-full border rounded shadow bg-white text-black">
+                <h2 className="text-xl font-semibold mb-4">Your Adoption Applications</h2>
+
+                {loadingApps && <p>Loading applications...</p>}
+
+                {!loadingApps && applications.length === 0 && isShelter && (
+                    <p>No adoption applications have been submitted for the pets you have available.</p>
+                )}
+
+                {!loadingApps && applications.length === 0 && !isShelter && (
+                    <p>You have not submitted any adoption applications yet.</p>
+                )}
+
+                {/* Filter bar */}
+                {applications.length > 0 && (
+                    <div className="flex items-center space-x-3 mb-4">
+                        <label className="font-medium">Status:</label>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="border p-2 rounded bg-white text-black"
+                        >
+                            <option value="all">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                )}
+
+                {/* Applications list */}
+                <div className="space-y-4">
+                    {applications
+                        .filter(app => statusFilter === "all" || app.Status === statusFilter)
+                        .map(app => (
+                            <ApplicationItem
+                                key={app.ApplicationID}
+                                app={app}
+                                isShelter={isShelter}
+                                onUpdateStatus={handleUpdateStatus}
+                                onUpdateNotes={handleUpdateNotes}
+                            />
+                        ))}
+                </div>
+            </div>
 
             {/* Profile details section */}
             <div className="flex flex-col items-center justify-center p-6 w-full border rounded shadow bg-white text-black">
@@ -215,22 +327,7 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {/* Adoption applications section */}
-            <div className="flex flex-col items-center justify-center p-6 mt-10 w-full border rounded shadow bg-white text-black">
-                <h2 className="text-xl font-semibold mb-4">Your Adoption Applications</h2>
 
-                {loadingApps && <p>Loading applications...</p>}
-
-                {!loadingApps && applications.length === 0 && (
-                    <p>You have not submitted any applications yet.</p>
-                )}
-
-                <div className="space-y-4">
-                    {applications.map((app) => (
-                        <ApplicationItem key={app.ApplicationID} app={app} />
-                    ))}
-                </div>
-            </div>
         </div>
     );
 }

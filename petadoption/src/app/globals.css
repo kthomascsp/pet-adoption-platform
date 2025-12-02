@@ -167,3 +167,19 @@ textarea {
     disabled:opacity-50 disabled:cursor-not-allowed
     transition-all;
 }
+
+/* Success button: Accept / Approve / Create */
+.btn-success {
+    @apply bg-green-500 text-white font-semibold px-4 py-2 rounded
+    hover:bg-green-600 active:bg-green-700 cursor-pointer
+    disabled:opacity-50 disabled:cursor-not-allowed
+    transition-all;
+}
+
+/* Danger button: Reject / Delete / Remove */
+.btn-danger {
+    @apply bg-red-500 text-white font-semibold px-4 py-2 rounded
+    hover:bg-red-600 active:bg-red-700 cursor-pointer
+    disabled:opacity-50 disabled:cursor-not-allowed
+    transition-all;
+}
