@@ -9,7 +9,7 @@ const About = () => {
                     best possible experience with their pet adoption needs. 
                 </p>
             </div>
-            
+            <Image src={"/petadoption.jpg"} alt={"adoption shelter image"} width={200} height={200} className="w-[30%] aspect-square object-cover object-center mx-auto p-8"/>
             <div className="text-center font-bold">
                 <h2 className="text-3xl p-6 pt-14">Created By:</h2>
                 <p className="text-2xl p-4 mx-auto w-[40%]">Elisha Bjerkeset<br />Carl Fredrickson<br />Kristen Thomas</p>

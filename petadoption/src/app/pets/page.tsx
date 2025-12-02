@@ -7,7 +7,7 @@ type PageProps = {
     searchParams?: Promise<Record<string, string | undefined>>;
 };
 
-/* Server page: fetch filter options once, apply URL filters, show pet results */
+/* Server page: fetch filter options once, apply URL filters, show pet results*/
 export default async function PetsPage({ searchParams }: PageProps) {
 
     const resolvedSearchParams = (await searchParams) ?? {};
@@ -181,15 +181,20 @@ export default async function PetsPage({ searchParams }: PageProps) {
                                 {p.ImageURL ? (
                                     <div className="relative w-full h-64 mb-3">
                                         <Image
-                                            src={p.ImageURL}
+                                            src={p.ImageURL || "dog-generic.png"}
                                             alt={p.PetName}
                                             fill
                                             className="object-cover rounded"
                                         />
                                     </div>
                                 ) : (
-                                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center rounded mb-3">
-                                        No Image
+                                    <div className="relative w-full h-64 mb-3">
+                                        <Image
+                                            src={"/dog-generic.png"}
+                                            alt={p.PetName}
+                                            fill
+                                            className="object-cover rounded"
+                                        />
                                     </div>
                                 )}
                                 <h2 className="text-xl font-semibold">
