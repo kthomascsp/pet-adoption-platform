@@ -160,7 +160,7 @@ export default function ProfilePage() {
             />
 
             {/* Adoption applications section */}
-            <div className="flex flex-col items-center justify-center p-6 mt-10 w-full border rounded shadow bg-white text-black">
+            <div className="flex flex-col items-center justify-center p-6 mt-10 border rounded shadow bg-white text-black">
                 <h2 className="text-xl font-semibold mb-4">Your Adoption Applications</h2>
 
                 {loadingApps && <p>Loading applications...</p>}
@@ -207,7 +207,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Profile details section */}
-            <div className="flex flex-col items-center justify-center p-6 w-full border rounded shadow bg-white text-black">
+            <div className="flex flex-col items-center justify-center p-6 border rounded shadow bg-white text-black">
                 <div className="text-xl font-semibold mb-4">
                     Profile Details
                 </div>

@@ -6,37 +6,105 @@
  *  - A navigation bar with site links
  */
 
-import LoginStatus from "./ui/LoginStatus";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import LoginStatus from "./ui/LoginStatus";
+import { motion } from "framer-motion";
 
-/**
- * Header component
- * Renders the top navigation area and site title.
- */
 export default function Header() {
-    return (
-        <header className="sticky top-0 z-50 bg-blue-400 text-white font-semibold shadow-md">
-            {/* Top bar with login/logout and temporary chat link */}
-            <div className="flex justify-end items-center p-2 text-sm pr-6 bg-blue-500/90 backdrop-blur-sm">
-                {/*<Link href="/chat">Chat Test Page</Link>*/}
-                {/*<Link href="/test-storage">Storage Test Page</Link>*/}
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const lastScrollY = useRef(0);
 
-                <LoginStatus /> {/* Shows user login or logout status */}
+    useEffect(() => {
+        const onScroll = () => {
+            const currentY = window.scrollY;
+
+            // Collapse when scrolling down past 20px
+            if (currentY > 20 && currentY > lastScrollY.current) {
+                setIsCollapsed(true);
+            }
+
+            // Expand when scrolling up by 30px or more
+            if (currentY < lastScrollY.current - 30) {
+                setIsCollapsed(false);
+            }
+
+            // Expand when at the top of page
+            if (currentY <= 5) {
+                setIsCollapsed(false);
+                //lastScrollY.current = 0;
+                //return;
+            }
+
+            lastScrollY.current = currentY;
+        };
+
+        window.addEventListener("scroll", onScroll);
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    return (
+        <header className="fixed top-0 left-0 right-0 z-50 bg-blue-500 text-white shadow-md">
+            {/* Always-visible top bar */}
+            <div className="flex justify-between items-center px-4 py-2 bg-blue-600 relative">
+                <div className="flex-1" />  {/* pushes LoginStatus to the right */}
+
+                {/* Collapsed Title (centered inside the top bar) */}
+                <motion.h1
+                    animate={{ opacity: isCollapsed ? 1 : 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="absolute left-1/2 -translate-x-1/2 text-xl font-bold pointer-events-none"
+                >
+                    Pet Adoption
+                </motion.h1>
+
+                {/* Login on the right */}
+                <LoginStatus />
             </div>
 
-            {/* Main site title */}
-            <h1 className="text-center text-5xl md:text-6xl m-2 md:m-4 p-2 md:p-4">
-                Pet Adoption
-            </h1>
+            {/* EXPANDED HEADER (big title + big nav) */}
+            <motion.div
+                initial={false}
+                animate={{
+                    height: isCollapsed ? 0 : "auto",
+                    opacity: isCollapsed ? 0 : 1,
+                }}
+                transition={{ duration: 0.35 }}
+                className="overflow-hidden bg-blue-500"
+            >
+                <h1 className="text-center text-5xl md:text-6xl py-6 font-semibold">
+                    Pet Adoption
+                </h1>
 
-            {/* Primary navigation links */}
-            <nav className="flex justify-evenly text-2xl p-8">
+                <nav className="flex justify-evenly text-2xl py-6 bg-blue-500">
+                    <Link href="/">Home</Link>
+                    <Link href="/pets">Pets</Link>
+                    <Link href="/shelters">Shelter</Link>
+                    <Link href="/process">Adoption Process</Link>
+                    <Link href="/about">About Us</Link>
+                </nav>
+            </motion.div>
+
+            {/* COLLAPSED SMALL NAV */}
+            <motion.nav
+                initial={false}
+                animate={{
+                    height: isCollapsed ? "2.75rem" : 0,
+                    opacity: isCollapsed ? 1 : 0,
+                }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden bg-blue-700 text-white text-base flex justify-evenly items-center"
+            >
                 <Link href="/">Home</Link>
                 <Link href="/pets">Pets</Link>
                 <Link href="/shelters">Shelter</Link>
                 <Link href="/process">Adoption Process</Link>
                 <Link href="/about">About Us</Link>
-            </nav>
+            </motion.nav>
         </header>
     );
 }
+
+

@@ -50,7 +50,7 @@ export default function RootLayout({
         <AuthProvider>
             <Header />
             {/* Main content grows to fill available space between header and footer */}
-            <main className="flex-grow">{children}</main>
+            <main className="flex-grow pt-[240px]">{children}</main>
             <Footer />
         </AuthProvider>
         </body>
