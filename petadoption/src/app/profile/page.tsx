@@ -59,7 +59,7 @@ export default function ProfilePage() {
                 else setApplications(data || []);
             }
 
-            console.log("Retrieved applications | isShelter: ", isShelter);
+            //console.log("Retrieved applications | isShelter: ", isShelter);
 
             setLoadingApps(false);
         };
@@ -90,8 +90,12 @@ export default function ProfilePage() {
         const { error } = await updateProfile(profile);
         setSaving(false);
 
-        if (error) alert("Error saving profile: " + error);
-        else alert("Profile updated successfully!");
+        if (error) {
+            console.log("Error saving profile: " + error);
+        }
+        else {
+            console.log("Profile updated successfully!");
+        }
     };
 
     // Update application status
@@ -133,7 +137,7 @@ export default function ProfilePage() {
             .eq("ApplicationID", appId)
             .select();
 
-        console.log("Update result:", data, error);
+        //console.log("Update result:", data, error);
         if (error) alert("Error updating notes: " + error.message);
 
         // Refresh UI

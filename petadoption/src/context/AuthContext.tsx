@@ -63,12 +63,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
 
     const fetchProfile = async (userId: string) => {
+        console.log("fetchProfile() | ", new Date().toISOString());
+        console.log("user: ", user);
+        console.log("profile: ", profile);
+
         const { data: profileData } = await supabase
             .from("profile_search_view")
             .select("*")
             .eq("ProfileID", userId)
             .single();
-        //console.log("profileData: ", profileData);
+        console.log("AuthContext.tsx | fetchProfile() | profileData: ", profileData);
 
         const updatedProfile = {
             ProfileName: profileData?.ProfileName || null,
@@ -85,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
 
         setProfile(updatedProfile);
-        //console.log("Setting profile to:", updatedProfile);
+        //console.log("Set profile to:", updatedProfile);
     };
 
     useEffect(() => {
@@ -95,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (sessionUser) {
                 setUser({ id: sessionUser.id, email: sessionUser.email ?? "" });
-                //console.log("[initAuth] sessionUser: ", sessionUser);
+                console.log("initAuth() | sessionUser: ", sessionUser);
                 await fetchProfile(sessionUser.id);
             } else {
                 setUser(null);
@@ -169,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }): Promise<AuthResult> => {
         setLoading(true);
 
-        // 1. Create auth user
+        // Create auth user
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
             email: form.email,
             password: form.password,
@@ -180,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return { error: signUpError.message, success: false };
         }
 
-        // 2. Create profile record
+        // Create profile record
         if (authData?.user) {
             const { error: profileError } = await supabase.from("Profile").insert([
                 {
@@ -208,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const logout = async () => {
-        //console.log("Logging out");
+        console.log("Logging out");
         await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
@@ -238,7 +242,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) return { error: error.message, success: false };
 
         // Update local profile state
-        //setProfile(prev => ({ ...prev, ...updates }));
         setProfile(prev => {
             if (!prev) return prev;
             return { ...prev, ...updates };
@@ -246,52 +249,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return { error: null, success: true };
     };
-
-    // Upload profile image
-    /*const uploadProfileImage = async (file: File): Promise<AuthResult> => {
-        if (!user) return { error: "No user", success: false };
-
-        const filePath = `profiles/${user.id}/profile-picture.${file.name.split(".").pop()}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from("ProfileImagesBucket")
-            .upload(filePath, file, { upsert: true });
-
-        if (uploadError) {
-            return { error: uploadError.message, success: false };
-        }
-
-        // Get URL
-        const { data: urlData } = supabase.storage
-            .from("ProfileImagesBucket")
-            .getPublicUrl(filePath);
-
-        const imageUrl = urlData.publicUrl;
-
-        // Delete old record
-        await supabase
-            .from("Image")
-            .delete()
-            .eq("OwnerID", user.id)
-            .eq("ImageType", "profile");
-
-        const { error: insertError } = await supabase.from("Image").insert([
-            { OwnerID: user.id, ImageType: "profile", URL: imageUrl }
-        ]);
-
-        if (insertError) {
-            return { error: insertError.message, success: false };
-        }
-
-        // Update profile state in context
-        //setProfile(prev => ({ ...prev, ImageURL: imageUrl }));
-        setProfile(prev => {
-            if (!prev) return prev;
-            return { ...prev, ImageURL: imageUrl };
-        });
-
-        return { error: null, success: true };
-    };*/
 
     return (
         <AuthContext.Provider

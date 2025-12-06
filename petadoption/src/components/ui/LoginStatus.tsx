@@ -15,8 +15,13 @@ export default function LoginStatus() {
     const { user, profile, loading, logout } = useAuth();
 
     if (loading) {
+        //console.log("LoginStatus.tsx | Loading...");
         return <span className="text-sm">Loading...</span>;
     }
+
+    //console.log("LoginStatus.tsx | AFTER Loading...");
+    /*console.log("user: ", user);
+    console.log("profile: ", profile);*/
 
     if (!user) {
         return (
