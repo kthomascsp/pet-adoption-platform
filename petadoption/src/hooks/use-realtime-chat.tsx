@@ -23,7 +23,7 @@ export interface ChatMessage {
  *
  */
 
-export function useRealtimeChat(threadKey: string) {
+export function useRealtimeChat(threadKey: string) {//, currentUser: any
     const supabase = createClient();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [userNames, setUserNames] = useState<Record<string, string>>({});
@@ -121,6 +121,12 @@ export function useRealtimeChat(threadKey: string) {
      * Sends a new message to the Supabase database for THIS thread.
      */
     const sendMessage = async (senderId: string, content: string) => {
+
+        //check supa base names
+        //if(currentUser.accountType == "shelter" && userNames.id !== currentUser.ProfileID) {
+          //  return ("error");
+        //}
+
         await supabase.from('message').insert([
             {
                 SenderID: senderId,
