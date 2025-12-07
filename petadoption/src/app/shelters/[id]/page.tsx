@@ -2,6 +2,7 @@ import MapProviderWrapper from "@/components/MapProviderWrapper";
 import MapView from "@/components/MapView";
 import { createClient } from "@/utils/supabase/server";
 import { ShelterChatSection } from "@/components/ShelterChatSection";
+import EditablePetsTable from "@/components/EditableTable";
 
 type PageProps = {
     params: Promise<{ id: string }>;
@@ -108,6 +109,9 @@ export default async function ShelterPage({ params }: PageProps) {
                 shelterId={shelterId}
                 shelterName={shelter.ProfileName}
             />
+
+            <h2 className="text-3xl font-bold m-6">Pets</h2>
+            <EditablePetsTable shelterId={shelterId} />
         </div>
     );
 }
