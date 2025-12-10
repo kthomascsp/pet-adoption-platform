@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import ProfileAvatar from "@/components/ProfileAvatar";
 import { createClient } from "@/utils/supabase/client";
 import ApplicationItem from "@/components/ApplicationItem"
+import AddPet from "@/components/AddPet";
 
 export default function ProfilePage() {
     const { user, profile, loading, setProfile, updateProfile } = useAuth();
@@ -330,7 +331,8 @@ export default function ProfilePage() {
                     </button>
                 </div>
             </div>
-
+            
+            <AddPet/>
 
         </div>
     );
