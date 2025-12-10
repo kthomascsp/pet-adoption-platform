@@ -1,9 +1,8 @@
 /**
  * Creates a Supabase client for client-side usage in the browser.
- * - Uses the public Supabase URL and anon key.
+ * - Uses the public Supabase URL and key.
  * - Enables client-side features like authentication and queries.
  * - Used in React components, hooks, and context providers.
- * - !!!! NOT USED - Instead utils/supabase/client should be used.
  */
 
 import { createBrowserClient } from "@supabase/ssr";
@@ -15,7 +14,13 @@ import { createBrowserClient } from "@supabase/ssr";
 export function createClient() {
     return createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        //process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+            },
+        }
     );
 }

@@ -7,17 +7,18 @@
 
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
-type UserType = {
+// --- Types ---
+type User = {
     id: string;
     email: string;
 } | null;
 
-type ProfileType = {
-    ProfileName?: string;
+type Profile = {
+    ProfileName: string | null;
     ProfileType: string;
     Address: string | null;
     City: string | null;
@@ -26,154 +27,139 @@ type ProfileType = {
     Phone: string | null;
     ProfileEmail: string | null;
     ProfileDescription: string;
-    ImageURL?: string | null;
+    ImageURL: string | null;
     LastName: string | null;
 } | null;
-
-interface AuthContextType {
-    user: UserType;
-    profile: ProfileType;
-    loading: boolean;
-    setUser: (user: UserType) => void;
-    setProfile: (profile: ProfileType | ((prev: ProfileType) => ProfileType)) => void;
-    login: (email: string, password: string) => Promise<AuthResult>;
-    signup: (form: {email: string, password: string, accountType: string, firstname: string, lastname: string, address: string, city: string,
-                 state: string, zip: string, phone: string}) => Promise<AuthResult>;
-    logout: () => Promise<void>;
-    updateProfile: (updates: Partial<NonNullableProfile>) => Promise<AuthResult>;
-    //uploadProfileImage: (file: File) => Promise<AuthResult>;
-}
 
 type AuthResult = {
     error: string | null;
     success: boolean;
 };
 
-type NonNullableProfile = Exclude<ProfileType, null>;
+interface AuthContextType {
+    user: User;
+    profile: Profile;
+    loading: boolean;
+    setUser: (u: User) => void;
+    setProfile: (p: Profile | ((prev: Profile) => Profile)) => void;
+    login: (email: string, password: string) => Promise<AuthResult>;
+    signup: (form: SignupForm) => Promise<AuthResult>;
+    logout: () => Promise<void>;
+    updateProfile: (updates: Partial<NonNullable<Profile>>) => Promise<AuthResult>;
+}
 
+type SignupForm = {
+    email: string;
+    password: string;
+    accountType: string;
+    firstname: string;
+    lastname: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    phone: string;
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<UserType>(null);
-    //const [profile, _setProfile] = useState<ProfileType>(null);
-    const [profile, _setProfile] = useState<NonNullableProfile | null>(null);
+    // Stable Supabase client instance
+    const supabase = useRef(createClient()).current;
+
+    const [user, setUser] = useState<User>(null);
+    const [profile, setProfile] = useState<Profile>(null);
     const [loading, setLoading] = useState(true);
-    const supabase = createClient();
+
     const router = useRouter();
 
+    // Fetch profile from view
     const fetchProfile = async (userId: string) => {
-        console.log("fetchProfile() | ", new Date().toISOString());
-        console.log("user: ", user);
-        console.log("profile: ", profile);
-
-        const { data: profileData } = await supabase
+        const { data } = await supabase
             .from("profile_search_view")
             .select("*")
             .eq("ProfileID", userId)
             .single();
-        console.log("AuthContext.tsx | fetchProfile() | profileData: ", profileData);
 
-        const updatedProfile = {
-            ProfileName: profileData?.ProfileName || null,
-            ProfileType: profileData?.ProfileType,
-            Address: profileData?.Address || null,
-            City: profileData?.City || null,
-            State: profileData?.State || null,
-            Zip: profileData?.Zip || null,
-            Phone: profileData?.Phone || null,
-            ProfileEmail: profileData?.ProfileEmail || null,
-            ProfileDescription: profileData?.ProfileDescription,
-            ImageURL: profileData?.ImageURL || null,
-            LastName: profileData?.LastName || null
-        };
+        if (!data) return;
 
-        setProfile(updatedProfile);
-        //console.log("Set profile to:", updatedProfile);
+        setProfile({
+            ProfileName: data.ProfileName ?? null,
+            ProfileType: data.ProfileType,
+            Address: data.Address ?? null,
+            City: data.City ?? null,
+            State: data.State ?? null,
+            Zip: data.Zip ?? null,
+            Phone: data.Phone ?? null,
+            ProfileEmail: data.ProfileEmail ?? null,
+            ProfileDescription: data.ProfileDescription,
+            ImageURL: data.ImageURL ?? null,
+            LastName: data.LastName ?? null,
+        });
     };
 
+    // Initial session load + listener
     useEffect(() => {
-        const initAuth = async () => {
+        let ignore = false; // Guard for Strict Mode double-run
+
+        const init = async () => {
             const { data } = await supabase.auth.getSession();
             const sessionUser = data.session?.user;
 
+            if (ignore) return;
+
             if (sessionUser) {
                 setUser({ id: sessionUser.id, email: sessionUser.email ?? "" });
-                console.log("initAuth() | sessionUser: ", sessionUser);
                 await fetchProfile(sessionUser.id);
             } else {
                 setUser(null);
                 setProfile(null);
             }
+
             setLoading(false);
         };
 
-        //console.log("BEFORE initAuth");
-        initAuth();
+        init();
 
-        const { data: authListener } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
+        // Listen for login/logout events
+        const { data: listener } = supabase.auth.onAuthStateChange(
+            async (event, session) => {
                 const sessionUser = session?.user;
+
                 if (sessionUser) {
                     setUser({ id: sessionUser.id, email: sessionUser.email ?? "" });
-                    //console.log("[onAuthStateChange] sessionUser: ", sessionUser);
                     await fetchProfile(sessionUser.id);
                 } else {
                     setUser(null);
                     setProfile(null);
                 }
+
                 setLoading(false);
             }
         );
 
         return () => {
-            authListener.subscription.unsubscribe();
+            ignore = true;
+            listener.subscription.unsubscribe();
         };
     }, [supabase]);
 
-    // Show a message in the console whenever the profile changes
-    useEffect(() => {
-        //console.log("Profile updated:", profile);
-    }, [profile]);
-
-    const setProfile = (
-        value: ProfileType | ((prev: ProfileType) => ProfileType)
-    ) => {
-        _setProfile(value);
-    };
+    // --- Auth Actions ---
 
     const login = async (email: string, password: string): Promise<AuthResult> => {
         setLoading(true);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-
-        if (error) {
-            setLoading(false);
-            return { error: error.message, success: false };
-        }
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
 
         setLoading(false);
+        if (error) return { error: error.message, success: false };
         return { error: null, success: true };
     };
 
-    const signup = async (form: {
-        email: string;
-        password: string;
-        accountType: string;
-        firstname: string;
-        lastname: string;
-        address: string;
-        city: string;
-        state: string;
-        zip: string;
-        phone: string;
-    }): Promise<AuthResult> => {
+    const signup = async (form: SignupForm): Promise<AuthResult> => {
         setLoading(true);
 
-        // Create auth user
+        // Create Supabase auth user
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
             email: form.email,
             password: form.password,
@@ -184,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return { error: signUpError.message, success: false };
         }
 
-        // Create profile record
+        // Insert profile row
         if (authData?.user) {
             const { error: profileError } = await supabase.from("Profile").insert([
                 {
@@ -212,40 +198,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const logout = async () => {
-        console.log("Logging out");
-        await supabase.auth.signOut();
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+            console.error("Logout error:", error);
+            return;
+        }
+
         setUser(null);
         setProfile(null);
+
         router.replace("/login");
     };
 
-    // Update profile fields
-    const updateProfile = async (updates: Partial<NonNullableProfile>): Promise<AuthResult> => {
+    const updateProfile = async (
+        updates: Partial<NonNullable<Profile>>
+    ): Promise<AuthResult> => {
         if (!user) return { error: "No user", success: false };
 
         const { error } = await supabase
             .from("Profile")
-            .update({
-                ProfileName: updates.ProfileName,
-                LastName: updates.LastName,
-                ProfileEmail: updates.ProfileEmail,
-                Phone: updates.Phone,
-                Address: updates.Address,
-                City: updates.City,
-                State: updates.State,
-                Zip: updates.Zip,
-                ProfileType: updates.ProfileType,
-                ProfileDescription: updates.ProfileDescription,
-            })
+            .update({ ...updates })
             .eq("ProfileID", user.id);
 
         if (error) return { error: error.message, success: false };
 
-        // Update local profile state
-        setProfile(prev => {
-            if (!prev) return prev;
-            return { ...prev, ...updates };
-        });
+        // Merge into local state
+        setProfile((prev) => (prev ? { ...prev, ...updates } : prev));
 
         return { error: null, success: true };
     };
@@ -261,20 +240,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 login,
                 signup,
                 logout,
-                updateProfile
-                //,uploadProfileImage
+                updateProfile,
             }}
         >
-
-        {children}
+            {children}
         </AuthContext.Provider>
     );
 }
 
 export function useAuth() {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error("useAuth must be used within AuthProvider");
-    }
-    return context;
+    const ctx = useContext(AuthContext);
+    if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+    return ctx;
 }
