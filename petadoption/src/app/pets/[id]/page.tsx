@@ -179,7 +179,7 @@ export default async function PetPage({ params, searchParams }: PageProps) {
                 </table>
 
 
-                <PetChatSection petId={petId} petName={pet.PetName} />
+                <PetChatSection petId={petId} petName={pet.PetName} petOwner={pet.ProfileID}/>
 
                 <div className="mt-8 text-center">
                     <Link
