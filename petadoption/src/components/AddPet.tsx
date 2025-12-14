@@ -14,7 +14,7 @@ export default function AddPet() {
         Size: "",
         Gender: "",
         PetDescription: "",
-        Status: "Available"
+        Status: "available"
     });
 
     const [loading, setLoading] = useState(false);
@@ -42,7 +42,8 @@ export default function AddPet() {
             setLoading(false);
             return;
         }
-        const {error} = await supabase.from("Pet").insert({...form, ProfileID: user.id});
+        const {error} = await supabase.from("Pet").insert({...form, Species: form.Species.toLowerCase(), Size: form.Size.toLowerCase(), 
+            Gender: form.Gender.toLowerCase(), ProfileID: user.id});
 
         setLoading(false);
 
@@ -61,7 +62,7 @@ export default function AddPet() {
             Size: "",
             Gender: "",
             PetDescription: "",
-            Status: "Available"
+            Status: "available"
         });
     }
 
