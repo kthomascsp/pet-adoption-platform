@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PetChatSection } from "@/components/PetChatSection";
 import ScrollToTopOnApplied from "@/components/ScrollToTopOnApplied";
+import PetPageClient from "./PetPageClient";
 
 export const dynamic = "force-dynamic";
 
@@ -189,6 +190,12 @@ export default async function PetPage({ params, searchParams }: PageProps) {
                         Apply to Adopt {pet.PetName}
                     </Link>
                 </div>
+
+                <PetPageClient
+                pet={pet}
+                petId={petId}
+                petOwner={pet.ProfileID}
+                />
             </div>
         );
     }
