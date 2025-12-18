@@ -1,29 +1,43 @@
-//https://supabase.com/docs/guides/auth/server-side/nextjs?queryGroups=router&router=app
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+/**
+ * Creates a Supabase client for server-side usage in Next.js.
+ * - Uses server cookies to persist sessions securely.
+ * - Supports Next.js 14's async cookie handling.
+ * - Used in server actions, loaders, and API routes.
+ */
 
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import type { Database } from "@/types/supabase";
+
+/**
+ * Initializes a Supabase client for server-side contexts.
+ * Automatically reads and writes authentication cookies
+ * to maintain the user's session between requests.
+ */
 export async function createClient() {
-    const cookieStore = cookies()
+    const cookieStore = await cookies(); // Next.js 14: must be awaited
 
-    return createServerClient(
+    return createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        //process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
         {
             cookies: {
+                // Retrieves all cookies for the current request
                 getAll() {
-                    return cookieStore.getAll()
+                    return cookieStore.getAll();
                 },
+                // Sets or updates cookies in the response
                 setAll(cookiesToSet) {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) =>
                             cookieStore.set(name, value, options)
-                        )
+                        );
                     } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // user sessions.
+                        // Ignore cookie writes during server rendering
                     }
                 },
             },
         }
-    )
+    );
 }

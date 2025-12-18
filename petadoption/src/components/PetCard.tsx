@@ -8,12 +8,18 @@ interface PetCardProps {
 
 const PetCard: React.FC<PetCardProps> = ({ name, description, imageUrl }) => {
   return (
-    <div className="max-w-sm overflow-hidden bg-blue-400 hover:shadow-xl">
-      <Image src={imageUrl} alt={name} width={400} height={200} className="h-90 p-8"/>
-      <div className="p-4 flex flex-col items-center">
-        <h3 className="text-xl font-bold mb-2">{name}</h3>
-        <p className="text-sm">{description}</p>
-      </div>
+    <div className="max-w-sm overflow-hidden bg-blue-400 hover:shadow-xl rounded-lg">
+        <Image
+            src={imageUrl || "/dog-generic.png"}
+            alt={name}
+            width={400}
+            height={200}
+            className="w-[400px] h-[400px] object-cover object-center"
+        />
+        <div className="p-4 flex flex-col items-center">
+            <h3 className="text-xl font-bold mb-2">{name}</h3>
+            <p className="text-sm">{description}</p>
+        </div>
     </div>
   );
 };
